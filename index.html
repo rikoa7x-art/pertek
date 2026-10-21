@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PipeMap Pro — Jaringan Pipa Air Bersih & Gambar Kerja</title>
+  <title>Pertek TRS — Desain Jaringan Pipa Air Bersih & Gambar Kerja</title>
 
   <!-- Leaflet CSS (local) -->
   <link rel="stylesheet" href="lib/leaflet.css" />
@@ -811,7 +811,7 @@
 <div id="header">
   <div class="logo">
     <img src="logo.jpg" alt="Logo" style="height:30px;width:auto;object-fit:contain;border-radius:4px;" />
-    💧 PipeMap Pro
+    💧 Pertek TRS
     <span class="subtitle">Desain Jaringan Pipa Air Bersih</span>
   </div>
 
@@ -3150,7 +3150,7 @@ function exportBOQtoCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `BOQ-Jaringan-Pipa-${Date.now()}.csv`;
+  a.download = `BOQ-Pertek-TRS-${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -3494,7 +3494,7 @@ function exportGeoJSON() {
   const url  = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `jaringan-pipa-${Date.now()}.geojson`;
+  a.download = `pertek-trs-${Date.now()}.geojson`;
   a.click();
   URL.revokeObjectURL(url);
 }

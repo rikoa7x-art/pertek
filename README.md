@@ -1,4 +1,4 @@
-# Pertek - Sistem Desain & Pemetaan Jaringan Pipa Air Bersih
+# Pertek TRS - Sistem Desain & Pemetaan Jaringan Pipa Air Bersih
 
 Aplikasi web interaktif untuk pemetaan, perencanaan teknis (Pertek), dan penggambaran jaringan pipa distribusi air bersih dengan latar belakang Google Maps, katalog pipa PVC/HDPE berwarna per diameter, aksesoris jaringan air bersih, notasi panah petunjuk (*leader callout*), kalkulasi BOQ (*Bill of Quantities*), serta lembar keluaran cetak ber-Kop Gambar (*Etiket*) standar PDAM / Dinas PUPR format A3/A4 Landscape.
 
