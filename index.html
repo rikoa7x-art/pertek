@@ -1,0 +1,3618 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PipeMap Pro — Jaringan Pipa Air Bersih & Gambar Kerja</title>
+
+  <!-- Leaflet CSS (local) -->
+  <link rel="stylesheet" href="lib/leaflet.css" />
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: #0f172a; color: #e2e8f0;
+      height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* ─── Header ────────────────────────────────────────────── */
+    #header {
+      background: linear-gradient(135deg, #0b1329 0%, #172554 100%);
+      padding: 6px 14px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 2px solid #0284c7;
+      flex-shrink: 0; z-index: 1000;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+      height: 48px;
+    }
+    #header .logo {
+      font-size: 18px; font-weight: 800; color: #38bdf8;
+      letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;
+      white-space: nowrap;
+    }
+    #header .subtitle { font-size: 11px; color: #94a3b8; font-weight: 400; }
+
+    .search-box {
+      display: flex; align-items: center; gap: 5px;
+      background: #0f172a; padding: 2px 6px; border-radius: 6px;
+      border: 1px solid #334155; margin-left: 10px;
+    }
+    .search-box input {
+      background: transparent; border: none; outline: none;
+      color: #f1f5f9; padding: 4px 6px; font-size: 12px; width: 190px;
+    }
+    .search-box input::placeholder { color: #64748b; }
+    .search-box button {
+      background: #0284c7; color: #fff; border: none;
+      padding: 4px 10px; border-radius: 4px; cursor: pointer;
+      font-size: 11px; font-weight: 700; transition: background 0.15s;
+    }
+    .search-box button:hover { background: #0369a1; }
+
+    #header .spacer { flex: 1; }
+
+    /* Header Project Action Buttons */
+    .header-actions {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .hdr-btn {
+      padding: 6px 11px; border-radius: 6px; border: none; cursor: pointer;
+      font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 5px;
+      transition: all 0.15s; white-space: nowrap; text-decoration: none;
+    }
+    .hdr-btn.layout-btn {
+      background: #8b5cf6; color: #ffffff;
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.45);
+    }
+    .hdr-btn.layout-btn:hover { background: #7c3aed; }
+    .hdr-btn.boq { background: #f59e0b; color: #0f172a; }
+    .hdr-btn.boq:hover { background: #fbbf24; }
+    .hdr-btn.info { background: #0284c7; color: #ffffff; }
+    .hdr-btn.info:hover { background: #0369a1; }
+    .hdr-btn.success { background: #10b981; color: #ffffff; }
+    .hdr-btn.success:hover { background: #059669; }
+    .hdr-btn.danger { background: #ef4444; color: #ffffff; }
+    .hdr-btn.danger:hover { background: #dc2626; }
+
+    /* ─── Main Layout ───────────────────────────────────────── */
+    #main { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+    /* ─── Sidebar / Toolbox ─────────────────────────────────── */
+    #sidebar {
+      width: 320px; flex-shrink: 0;
+      background: #0f172a;
+      display: flex; flex-direction: column;
+      border-right: 1px solid #1e293b;
+      overflow: hidden; z-index: 500;
+    }
+
+    /* ─── Mode Buttons Bar (Compact 1 Row) ──────────────────── */
+    #mode-buttons {
+      padding: 6px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+      background: #0b1120; border-bottom: 1px solid #1e293b; flex-shrink: 0;
+    }
+    .mode-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 6px 2px; border-radius: 6px;
+      border: 1px solid #1e293b;
+      cursor: pointer; font-size: 11px;
+      background: #1e293b; color: #94a3b8;
+      transition: all 0.15s;
+    }
+    .mode-btn:hover { background: #334155; color: #e2e8f0; border-color: #38bdf8; }
+    .mode-btn.active {
+      background: #0284c7; color: #ffffff; border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(2, 132, 199, 0.45); font-weight: 700;
+    }
+    .mode-btn.danger-mode.active {
+      background: #ef4444; border-color: #f87171; box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
+    }
+    .mode-btn .icon { font-size: 15px; line-height: 1.1; margin-bottom: 2px; }
+    .mode-btn .label { font-size: 10px; font-weight: 600; }
+
+    /* ─── Sidebar Navigation Tabs ───────────────────────────── */
+    .sidebar-tabs {
+      display: flex; background: #0b1120; border-bottom: 2px solid #1e293b; flex-shrink: 0;
+    }
+    .sb-tab {
+      flex: 1; padding: 9px 4px; border: none; background: transparent;
+      color: #94a3b8; font-size: 11px; font-weight: 700; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .sb-tab:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+    .sb-tab.active {
+      color: #38bdf8; border-bottom: 2px solid #38bdf8; background: #0f172a;
+    }
+
+    /* ─── Panels ────────────────────────────────────────────── */
+    .sidebar-panel {
+      flex: 1; display: flex; flex-direction: column; overflow-y: auto;
+      padding: 0;
+    }
+
+    .panel-header {
+      padding: 10px 14px 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      color: #7dd3fc; text-transform: uppercase; display: flex; justify-content: space-between;
+      align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120;
+      flex-shrink: 0;
+    }
+
+    /* ─── Pipe Panel Elements ───────────────────────────────── */
+    .material-toggle {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 8px 12px; background: #0b1120; border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+    .mat-tab-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 7px 6px; border-radius: 8px;
+      border: 2px solid #334155; cursor: pointer;
+      background: #1e293b; color: #94a3b8;
+      transition: all 0.2s;
+    }
+    .mat-tab-btn:hover { background: #334155; color: #e2e8f0; }
+    .mat-tab-btn.active.pvc {
+      background: #034f84; border-color: #38bdf8; color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+    .mat-tab-btn.active.hdpe {
+      background: #1e293b; border-color: #facc15; color: #ffffff;
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.35);
+    }
+    .mat-tab-title { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+    .mat-tab-sub { font-size: 9px; opacity: 0.8; }
+
+    #pipe-settings {
+      padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;
+      flex: 1; overflow-y: auto;
+    }
+    .diam-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px; border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer; transition: all 0.15s;
+      background: #1e293b;
+    }
+    .diam-item:hover { background: #28374d; }
+    .diam-item.selected {
+      border-color: #38bdf8; background: #24354d;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+    .diam-swatch {
+      width: 32px; height: 9px; border-radius: 4px; flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .diam-label { font-size: 12px; font-weight: 700; flex: 1; color: #f1f5f9; }
+    .diam-inch { font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .diam-check { font-size: 12px; color: #38bdf8; display: none; font-weight: 800; }
+    .diam-item.selected .diam-check { display: inline-block; }
+
+    /* ─── Pipe Line Style & Weight Settings ─────────────────── */
+    .pipe-style-card {
+      margin: 6px 10px 8px;
+      padding: 9px 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+    }
+    .pipe-style-title {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; font-weight: 700; color: #f1f5f9; margin-bottom: 7px;
+    }
+    .style-badge {
+      font-size: 9.5px; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; background: #0f172a; color: #38bdf8;
+      border: 1px solid #334155;
+    }
+    .line-style-btn-group {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 7px;
+    }
+    .line-style-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 6px 2px; border-radius: 6px;
+      background: #0f172a; border: 1.5px solid #334155;
+      color: #94a3b8; cursor: pointer; transition: all 0.15s;
+      font-size: 9.5px; font-weight: 700;
+    }
+    .line-style-btn:hover {
+      background: #1e3a5f; border-color: #64748b; color: #f1f5f9;
+    }
+    .line-style-btn.active {
+      background: #1e3a5f; border-color: #38bdf8; color: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+    .line-style-btn svg {
+      display: block;
+    }
+    .thickness-control-box {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #2d3f56;
+    }
+    .thickness-label-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 10.5px; color: #cbd5e1; margin-bottom: 3px;
+    }
+    .weight-display {
+      font-weight: 800; color: #38bdf8; font-size: 11px;
+      background: #0f172a; padding: 1px 6px; border-radius: 4px;
+      border: 1px solid #334155;
+    }
+    .auto-weight-label {
+      font-size: 10px; color: #94a3b8; display: flex; align-items: center; gap: 3px;
+      cursor: pointer; user-select: none;
+    }
+    .auto-weight-label input {
+      accent-color: #38bdf8; cursor: pointer;
+    }
+    #line-weight-slider {
+      width: 100%; height: 5px; accent-color: #38bdf8;
+      background: #0f172a; border-radius: 4px; cursor: pointer;
+    }
+    .thickness-range-marks {
+      display: flex; justify-content: space-between;
+      font-size: 8px; color: #64748b; margin-top: 2px;
+    }
+    .line-live-preview {
+      margin-top: 7px; padding: 3px 8px; border-radius: 6px;
+      background: #0f172a; border: 1px solid #2a3a50;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .prop-quick-btn {
+      flex: 1; padding: 5px 2px; border-radius: 5px;
+      background: #0f172a; border: 1px solid #334155;
+      color: #cbd5e1; font-size: 10px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .prop-quick-btn:hover { border-color: #38bdf8; color: #fff; }
+    .prop-quick-btn.active {
+      background: #1e3a5f; border-color: #38bdf8; color: #38bdf8;
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.35);
+    }
+
+    /* ─── Accessory Panel Elements ──────────────────────────── */
+    #acc-buttons {
+      padding: 8px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      flex: 1; overflow-y: auto;
+    }
+    .acc-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 10px 4px; border-radius: 8px;
+      border: 1px solid #2a3a50; cursor: pointer;
+      font-size: 11px; text-align: center;
+      background: #182436; color: #cbd5e1;
+      transition: all 0.2s;
+    }
+    .acc-btn:hover { background: #22334a; border-color: #38bdf8; }
+    .acc-btn.active {
+      background: #1e3a5f; border-color: #38bdf8; color: #fff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+    }
+    .acc-icon-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4); margin-bottom: 2px;
+    }
+    .acc-title { font-size: 11px; font-weight: 700; color: #f1f5f9; line-height: 1.1; }
+    .acc-subtitle { font-size: 9px; color: #94a3b8; }
+
+    /* ─── Properties Panel Elements ─────────────────────────── */
+    #panel-prop {
+      padding: 12px; flex: 1; overflow-y: auto;
+    }
+    .prop-card {
+      background: #1e293b; border-radius: 8px; padding: 12px; border: 1px solid #334155;
+    }
+    .prop-card h4 {
+      font-size: 13px; color: #38bdf8; margin-bottom: 10px; border-bottom: 1px solid #334155;
+      padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .prop-row {
+      display: flex; justify-content: space-between; margin-bottom: 6px;
+      border-bottom: 1px solid #2d3f56; padding-bottom: 4px; font-size: 12px;
+    }
+    .prop-key { color: #94a3b8; font-weight: 500; }
+    .prop-val { color: #f8fafc; font-weight: 700; text-align: right; }
+    .prop-actions-box {
+      display: flex; gap: 8px; margin-top: 14px;
+    }
+    .prop-act-btn {
+      flex: 1; padding: 8px; border-radius: 6px; border: none; cursor: pointer;
+      font-size: 11px; font-weight: 700; transition: all 0.15s;
+    }
+    .prop-act-btn.edit { background: #0284c7; color: #fff; }
+    .prop-act-btn.edit:hover { background: #0369a1; }
+    .prop-act-btn.del { background: #ef4444; color: #fff; }
+    .prop-act-btn.del:hover { background: #dc2626; }
+
+    .help-hint {
+      margin-top: 12px; background: rgba(56, 189, 248, 0.08); border: 1px dashed rgba(56, 189, 248, 0.3);
+      padding: 8px 10px; border-radius: 6px; font-size: 11px; color: #7dd3fc; line-height: 1.5;
+    }
+
+    /* ─── Map Container ──────────────────────────────────────── */
+    #map-container {
+      flex: 1; position: relative; height: 100%; width: 100%;
+    }
+    #map { width: 100%; height: 100%; }
+
+    /* ─── Floating Drawing Toolbar ──────────────────────────── */
+    .floating-toolbar {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
+      border: 1px solid #38bdf8; border-radius: 30px;
+      padding: 6px 14px; display: flex; align-items: center; gap: 10px;
+      z-index: 800; box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+    }
+    .draw-info { font-size: 12px; color: #f8fafc; font-weight: 600; padding: 0 4px; }
+    .tool-btn {
+      padding: 5px 12px; border-radius: 20px; border: none; cursor: pointer;
+      font-size: 12px; font-weight: 700; transition: all 0.15s;
+    }
+    .tool-btn.finish { background: #10b981; color: #ffffff; }
+    .tool-btn.finish:hover { background: #34d399; }
+    .tool-btn.undo { background: #475569; color: #ffffff; }
+    .tool-btn.undo:hover { background: #64748b; }
+    .tool-btn.cancel { background: #ef4444; color: #ffffff; }
+    .tool-btn.cancel:hover { background: #f87171; }
+
+    /* ─── Status Bar ─────────────────────────────────────────── */
+    #statusbar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(4px);
+      padding: 4px 14px; display: flex; gap: 18px; align-items: center;
+      font-size: 11px; color: #94a3b8; z-index: 500;
+      border-top: 1px solid #1e293b; height: 26px;
+    }
+    #statusbar .stat { display: flex; gap: 5px; align-items: center; }
+    #statusbar .stat-val { color: #f1f5f9; font-weight: 700; }
+
+    /* ─── Legend (floating in Editor Mode) ───────────────────── */
+    #legend {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(8px);
+      border: 1px solid #334155; border-radius: 10px;
+      padding: 10px 12px; z-index: 600; min-width: 190px; max-width: 240px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      max-height: 80vh; overflow-y: auto;
+    }
+    #legend.collapsed .legend-body { display: none; }
+    .legend-header {
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; user-select: none;
+    }
+    .legend-header h4 { font-size: 11px; color: #7dd3fc; letter-spacing: 1px; text-transform: uppercase; }
+    .leg-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 11px; color: #cbd5e1; }
+    .leg-pipe { height: 4px; width: 24px; border-radius: 2px; flex-shrink: 0; }
+    .leg-acc-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .leg-divider { border: none; border-top: 1px solid #334155; margin: 6px 0; }
+
+    /* ─── Snapping & Vertex Indicators ───────────────────────── */
+    .snap-indicator {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px dashed #00e676; background: rgba(0, 230, 118, 0.25);
+      pointer-events: none;
+    }
+    .vertex-handle {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #ffffff; border: 2.5px solid #0284c7;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.6); cursor: move;
+    }
+
+    /* ─── Engineering Pipe Callout Box with Arrow on Map ──────── */
+    .pipe-callout-marker {
+      background: transparent !important;
+      border: none !important;
+      cursor: grab;
+    }
+    .pipe-callout-marker:active {
+      cursor: grabbing;
+    }
+    .pipe-callout-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transform: translate(-50%, -100%);
+      pointer-events: auto;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.45));
+    }
+    .pipe-callout-container.offset-mode {
+      transform: translate(-50%, -50%);
+    }
+    .pipe-callout-box {
+      background: rgba(255, 255, 255, 0.98);
+      border: 1.5px solid #0f172a;
+      color: #000000;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 4px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .pipe-callout-box:hover {
+      border-color: #0284c7;
+      box-shadow: 0 0 8px rgba(2, 132, 199, 0.5);
+    }
+    .pipe-callout-box .pipetag {
+      display: inline-block; width: 8.5px; height: 8.5px; border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.3); flex-shrink: 0;
+    }
+    .pipe-callout-text {
+      color: #0f172a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+    .pipe-callout-btn-edit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 9px;
+      color: #475569;
+      cursor: pointer;
+      margin-left: 2px;
+      transition: all 0.15s;
+    }
+    .pipe-callout-btn-edit:hover {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+    .pipe-callout-arrow-svg {
+      display: block;
+      margin-top: -1px;
+    }
+    .pipe-leader-arrow-head {
+      background: transparent !important;
+      border: none !important;
+    }
+
+    /* ─── Viewport Overlay Badges (PETA SITUASI & UTARA) ─────── */
+    .viewport-badge-situasi {
+      position: absolute; bottom: 16px; left: 16px;
+      background: #ffffff; border: 2px solid #000000;
+      padding: 6px 14px; font-weight: 900; font-size: 15px; color: #000000;
+      letter-spacing: 1.5px; z-index: 550; display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3); pointer-events: none;
+    }
+    .viewport-badge-situasi .sq-icon {
+      width: 14px; height: 14px; border: 2px solid #000; display: inline-block;
+      transform: rotate(45deg);
+    }
+
+    .viewport-north-box {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(255,255,255,0.92); border: 1.5px solid #000000;
+      border-radius: 4px; padding: 6px 8px; z-index: 550;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3); pointer-events: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MODE GAMBAR KERJA / PRINT LAYOUT (A3 / A4 Paper Sheet)
+       ═══════════════════════════════════════════════════════════ */
+    #layout-toolbar {
+      position: absolute; top: 58px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px);
+      border: 1.5px solid #8b5cf6; border-radius: 30px;
+      padding: 6px 16px; display: none; align-items: center; gap: 14px;
+      z-index: 950; box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+    }
+    .lt-btn {
+      padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer;
+      font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .lt-btn.print { background: #10b981; color: #ffffff; }
+    .lt-btn.print:hover { background: #059669; }
+    .lt-btn.primary { background: #0284c7; color: #ffffff; }
+    .lt-btn.primary:hover { background: #0369a1; }
+    .lt-btn.info { background: #475569; color: #ffffff; }
+    .lt-btn.info:hover { background: #64748b; }
+    .lt-btn.close { background: #ef4444; color: #ffffff; }
+    .lt-btn.close:hover { background: #dc2626; }
+
+    /* When body has class .in-layout-mode */
+    body.in-layout-mode {
+      background: #1e293b;
+    }
+    body.in-layout-mode #sidebar,
+    body.in-layout-mode #statusbar,
+    body.in-layout-mode #legend,
+    body.in-layout-mode .floating-toolbar {
+      display: none !important;
+    }
+    body.in-layout-mode #layout-toolbar {
+      display: flex;
+    }
+    body.in-layout-mode #main {
+      padding: 50px 20px 20px;
+      align-items: center;
+      justify-content: center;
+      background: #1e293b;
+      overflow: auto;
+    }
+
+    /* The Drawing Sheet container */
+    #sheet-container {
+      display: none;
+      width: 100%; height: 100%;
+      align-items: center; justify-content: center;
+    }
+    body.in-layout-mode #sheet-container {
+      display: flex;
+    }
+    body.in-layout-mode #map-container {
+      display: none; /* Map container will be housed inside #sheet-frame */
+    }
+
+    /* Drawing Paper Sheet (A3 / A4 Landscape) */
+    .sheet-paper {
+      background: #ffffff; color: #000000;
+      width: 1240px; height: 876px; /* A3 landscape aspect ~1.414 */
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column;
+      padding: 12px 12px 12px 18px; /* Standard left binding margin */
+      border: 1px solid #94a3b8;
+      flex-shrink: 0;
+    }
+
+    /* Double Border Line Standard (Teknik PU / SNI) */
+    .sheet-outer-frame {
+      border: 2px solid #000000;
+      width: 100%; height: 100%;
+      display: flex;
+      padding: 3px;
+    }
+    .sheet-inner-frame {
+      border: 1px solid #000000;
+      width: 100%; height: 100%;
+      display: flex;
+    }
+
+    /* Left: Viewport Gambar Kerja (81% of sheet) */
+    .sheet-left-pane {
+      width: 81%; height: 100%;
+      position: relative;
+      border-right: 2px solid #000000;
+      overflow: hidden;
+    }
+    .sheet-left-pane #map-mount {
+      width: 100%; height: 100%;
+    }
+
+    /* Right: KOP GAMBAR (Etiket - 19% of sheet, reduced width) */
+    .sheet-right-pane {
+      width: 19%; height: 100%;
+      display: flex; flex-direction: column;
+      background: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    /* ─── KOP BOX STYLES ─────────────────────────────────────── */
+    .kop-box {
+      border-bottom: 1px solid #000000;
+      padding: 3px 5px;
+      font-size: 8px;
+      color: #000000;
+    }
+    .kop-box:last-child {
+      border-bottom: none;
+    }
+
+    .kop-title-bar {
+      font-weight: 800; font-size: 9.5px; text-align: center;
+      letter-spacing: 0.8px; padding: 2px 0; border-bottom: 1px solid #000000;
+      background: #f1f5f9; text-transform: uppercase;
+    }
+
+    .kop-sec-label {
+      font-size: 7.5px; font-weight: 800; text-transform: uppercase;
+      color: #334155; margin-bottom: 1px;
+    }
+
+    /* Keterangan & Detail Trench Table */
+    .trench-detail-row {
+      display: flex; gap: 4px; align-items: center; margin: 3px 0;
+    }
+    .trench-diagram {
+      width: 80px; height: 48px; border: 1px solid #000;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      font-size: 7px; text-align: center; background: #fafafa;
+    }
+
+    .galian-table {
+      width: 100%; border-collapse: collapse; font-size: 6.8px; margin-top: 3px;
+    }
+    .galian-table th, .galian-table td {
+      border: 1px solid #000000; padding: 1px 2px; text-align: center;
+    }
+    .galian-table th { background: #f1f5f9; font-weight: 800; }
+
+    /* Kop Legend Grid */
+    .kop-legend-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5px 4px;
+      margin-top: 3px; font-size: 6.8px;
+    }
+    .kop-leg-item {
+      display: flex; align-items: center; gap: 3px; font-weight: 600;
+    }
+    .kop-leg-dot {
+      width: 12px; height: 3.5px; border-radius: 1px; flex-shrink: 0;
+    }
+
+    /* Kop Logo & Instansi */
+    .kop-instansi-box {
+      text-align: center; padding: 4px 3px;
+    }
+    .kop-instansi-nama {
+      font-size: 8px; font-weight: 900; line-height: 1.2; text-transform: uppercase;
+    }
+    .kop-instansi-sub {
+      font-size: 6.5px; color: #475569; margin-top: 2px; line-height: 1.15;
+    }
+
+    /* Kop Project Content */
+    .kop-proj-text {
+      font-size: 7.5px; font-weight: 700; line-height: 1.2;
+      text-transform: uppercase; color: #000000;
+    }
+
+    /* Kop Title Box */
+    .kop-main-title {
+      font-size: 13px; font-weight: 900; text-align: center;
+      letter-spacing: 1.5px; padding: 4px 0;
+    }
+
+    /* Kop Pengesahan (3 Pejabat) */
+    .kop-sign-col {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 3px 2px; border-bottom: 1px solid #000;
+    }
+    .kop-sign-col:last-child { border-bottom: none; }
+    .kop-sign-role { font-size: 7px; font-weight: 700; line-height: 1.1; text-transform: uppercase; margin-bottom: 1px; }
+    .kop-sign-img-box {
+      height: 22px; display: flex; align-items: center; justify-content: center;
+    }
+    .kop-sign-name { font-size: 8px; font-weight: 900; text-decoration: underline; }
+    .kop-sign-nip { font-size: 6.8px; color: #334155; }
+
+    /* Kop Bottom Metadata Grid */
+    .kop-meta-grid {
+      display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #000;
+      font-size: 7px; margin-top: auto;
+    }
+    .kop-meta-cell {
+      padding: 2.5px 3px; border-right: 1px solid #000; border-bottom: 1px solid #000;
+    }
+    .kop-meta-cell:nth-child(2n) { border-right: none; }
+    .kop-meta-cell:nth-last-child(-n+2) { border-bottom: none; }
+    .kop-meta-label { font-size: 6.5px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .kop-meta-val { font-weight: 800; font-size: 7.5px; }
+
+    /* ─── Modals ──────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000; display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 12px; padding: 22px; width: 440px; max-width: 95vw;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+    }
+    .modal-box h3 { color: #38bdf8; margin-bottom: 14px; font-size: 16px; font-weight: 700; }
+    .modal-box label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 3px; font-weight: 600; }
+    .modal-box input, .modal-box select, .modal-box textarea {
+      width: 100%; background: #1e293b; border: 1px solid #334155;
+      color: #f1f5f9; padding: 7px 9px; border-radius: 6px;
+      font-size: 12px; margin-bottom: 8px; outline: none;
+    }
+    .modal-box input:focus, .modal-box select:focus, .modal-box textarea:focus {
+      border-color: #38bdf8;
+    }
+    .modal-box .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+    .modal-btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .modal-btn.primary { background: #0284c7; color: #fff; }
+    .modal-btn.primary:hover { background: #0369a1; }
+    .modal-btn.secondary { background: #334155; color: #cbd5e1; }
+    .modal-btn.secondary:hover { background: #475569; }
+
+    /* ─── BOQ Table ─────────────────────────────────────────── */
+    .boq-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px;
+    }
+    .boq-table th {
+      background: #1e293b; color: #7dd3fc; text-align: left;
+      padding: 8px 10px; border-bottom: 2px solid #334155; font-weight: 700;
+    }
+    .boq-table td {
+      padding: 7px 10px; border-bottom: 1px solid #1e293b; color: #e2e8f0;
+    }
+    .boq-table tr:hover td { background: #1e293b; }
+    .boq-total-row td {
+      font-weight: 800; color: #10b981; border-top: 2px solid #38bdf8; background: #0b1120;
+    }
+
+    /* ─── PRINT MEDIA QUERY (Exact Vector A3 / A4) ───────────── */
+    @media print {
+      @page {
+        size: A3 landscape;
+        margin: 5mm;
+      }
+      html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
+      }
+      #header, #sidebar, #statusbar, #layout-toolbar, #legend,
+      .floating-toolbar, .leaflet-control-zoom, .leaflet-control-layers,
+      .modal-overlay {
+        display: none !important;
+      }
+      #main {
+        padding: 0 !important;
+        background: none !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      #sheet-container {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .sheet-paper {
+        width: 100% !important;
+        height: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+      .sheet-outer-frame {
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .sheet-inner-frame {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+
+    /* Cursor */
+    .draw-cursor { cursor: crosshair !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div id="header">
+  <div class="logo">
+    <img src="logo.jpg" alt="Logo" style="height:30px;width:auto;object-fit:contain;border-radius:4px;" />
+    💧 PipeMap Pro
+    <span class="subtitle">Desain Jaringan Pipa Air Bersih</span>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="Cari kota, jalan, koordinat..." onkeydown="if(event.key==='Enter') searchLocation()" />
+    <button onclick="searchLocation()">🔍 Cari</button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- Project Actions in Topbar -->
+  <div class="header-actions">
+    <button class="hdr-btn layout-btn" onclick="toggleLayoutMode()" title="Buka Mode Gambar Kerja Lengkap dengan Kop Gambar Standar PU / PDAM">
+      📐 Gambar Kerja & Kop
+    </button>
+    <button class="hdr-btn boq" onclick="openBOQModal()" title="Rekapitulasi Total Material (BOQ)">
+      📊 BOQ Rekap
+    </button>
+    <button class="hdr-btn info" onclick="exportGeoJSON()" title="Simpan file proyek GeoJSON">
+      ⬇ Export
+    </button>
+    <button class="hdr-btn success" onclick="importGeoJSON()" title="Buka file proyek GeoJSON">
+      ⬆ Import
+    </button>
+    <button class="hdr-btn danger" onclick="clearAll()" title="Bersihkan Seluruh Jaringan">
+      🗑 Bersihkan
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ════════════════ -->
+<div id="main">
+
+  <!-- ══ SIDEBAR (Editor Mode) ══ -->
+  <div id="sidebar">
+
+    <!-- Mode Buttons (Compact 1-Row Toolbar) -->
+    <div id="mode-buttons">
+      <button class="mode-btn" data-mode="select" onclick="setMode('select')" title="Pilih / Edit (S)">
+        <span class="icon">↖</span>
+        <span class="label">Pilih</span>
+      </button>
+      <button class="mode-btn active" data-mode="pipe" onclick="setMode('pipe')" title="Gambar Pipa (P)">
+        <span class="icon">〰</span>
+        <span class="label">Pipa</span>
+      </button>
+      <button class="mode-btn" data-mode="accessory" onclick="setMode('accessory')" title="Pasang Aksesori (A)">
+        <span class="icon">⚙</span>
+        <span class="label">Aksesori</span>
+      </button>
+      <button class="mode-btn" data-mode="measure" onclick="setMode('measure')" title="Ukur Jarak (M)">
+        <span class="icon">📏</span>
+        <span class="label">Ukur</span>
+      </button>
+      <button class="mode-btn danger-mode" data-mode="delete" onclick="setMode('delete')" title="Mode Hapus (D)">
+        <span class="icon">🗑</span>
+        <span class="label">Hapus</span>
+      </button>
+    </div>
+
+    <!-- Sidebar Navigation Tabs -->
+    <div class="sidebar-tabs">
+      <button id="tab-btn-pipe" class="sb-tab active" onclick="switchSidebarTab('pipe')">
+        〰 Pipa & Diameter
+      </button>
+      <button id="tab-btn-acc" class="sb-tab" onclick="switchSidebarTab('acc')">
+        ⚙ Aksesori (12)
+      </button>
+      <button id="tab-btn-prop" class="sb-tab" onclick="switchSidebarTab('prop')">
+        📋 Properti
+      </button>
+    </div>
+
+    <!-- ── PANEL 1: PIPA & DIAMETER ── -->
+    <div id="panel-pipe" class="sidebar-panel">
+      <div class="material-toggle">
+        <div id="mat-btn-pvc" class="mat-tab-btn active pvc" onclick="switchMaterial('PVC')">
+          <span class="mat-tab-title">🔷 PVC (AW)</span>
+          <span class="mat-tab-sub">Standar JIS / SNI</span>
+        </div>
+        <div id="mat-btn-hdpe" class="mat-tab-btn hdpe" onclick="switchMaterial('HDPE')">
+          <span class="mat-tab-title">⚫ HDPE (PE-100)</span>
+          <span class="mat-tab-sub">SDR 11 / 17 (OD)</span>
+        </div>
+      </div>
+
+      <!-- ── PENGATURAN GAYA & KETEBALAN GARIS ── -->
+      <div class="pipe-style-card">
+        <div class="pipe-style-title">
+          <span>🎨 Gaya & Tebal Garis</span>
+          <span id="style-preview-badge" class="style-badge">Solid • 10px</span>
+        </div>
+
+        <!-- Tombol Pilihan Gaya Garis -->
+        <div class="line-style-btn-group">
+          <button type="button" class="line-style-btn active" id="btn-style-solid" onclick="setLineStyle('solid')" title="Garis Lurus Menerus (Solid)">
+            <svg viewBox="0 0 36 10" width="32" height="10">
+              <line x1="2" y1="5" x2="34" y2="5" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <span>Solid</span>
+          </button>
+          <button type="button" class="line-style-btn" id="btn-style-dot" onclick="setLineStyle('dot')" title="Garis Titik-titik (Dotted)">
+            <svg viewBox="0 0 36 10" width="32" height="10">
+              <line x1="2" y1="5" x2="34" y2="5" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-dasharray="1, 6"/>
+            </svg>
+            <span>Dot (Titik)</span>
+          </button>
+          <button type="button" class="line-style-btn" id="btn-style-dash" onclick="setLineStyle('dash')" title="Garis Putus-putus (Dashed)">
+            <svg viewBox="0 0 36 10" width="32" height="10">
+              <line x1="2" y1="5" x2="34" y2="5" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-dasharray="7, 5"/>
+            </svg>
+            <span>Putus (Dash)</span>
+          </button>
+        </div>
+
+        <!-- Pengaturan Ketebalan Garis -->
+        <div class="thickness-control-box">
+          <div class="thickness-label-row">
+            <span>Tebal Garis:</span>
+            <span id="line-weight-val" class="weight-display">10 px</span>
+            <label class="auto-weight-label" title="Ketebalan otomatis mengikuti standar diameter">
+              <input type="checkbox" id="chk-auto-weight" checked onchange="toggleAutoWeight(this.checked)"> Auto Ø
+            </label>
+          </div>
+          <input type="range" id="line-weight-slider" min="2" max="22" step="1" value="10" oninput="onWeightSliderChange(this.value)">
+          <div class="thickness-range-marks">
+            <span>Halus (2px)</span>
+            <span>Standar (10px)</span>
+            <span>Tebal (22px)</span>
+          </div>
+        </div>
+
+        <!-- Live SVG Line Preview -->
+        <div class="line-live-preview" id="line-live-preview-box" title="Pratinjau garis saat digambar di peta">
+          <svg id="line-preview-svg" viewBox="0 0 220 18" width="100%" height="18">
+            <line id="preview-line-elem" x1="10" y1="9" x2="210" y2="9" stroke="#00E676" stroke-width="10" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="panel-header">
+        <span id="diam-section-label">Pilihan Diameter PVC</span>
+        <span style="font-size:9px;color:#94a3b8;text-transform:none;">Warna Pembeda</span>
+      </div>
+
+      <div id="pipe-settings"></div>
+
+      <div style="padding: 10px;">
+        <div class="help-hint">
+          💡 <strong>Petunjuk Menggambar Pipa:</strong><br>
+          1. Klik di peta untuk membuat titik jalur pipa.<br>
+          2. Tekan <strong>Enter</strong> atau <strong>Klik Kanan</strong> untuk selesai.<br>
+          3. Tekan <strong>Backspace</strong> untuk membatalkan titik terakhir.<br>
+          4. Kursor otomatis <em>snap</em> menyambung ke pipa lain.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL 2: AKSESORI ── -->
+    <div id="panel-acc" class="sidebar-panel" style="display:none;">
+      <div class="panel-header">
+        <span>Katalog Aksesori & Fitting</span>
+        <span style="font-size:9px;color:#94a3b8;text-transform:none;">12 Item</span>
+      </div>
+
+      <div id="acc-buttons"></div>
+
+      <div style="padding: 10px;">
+        <div class="help-hint">
+          💡 <strong>Petunjuk Penempatan Aksesori:</strong><br>
+          1. Pilih salah satu aksesori di atas.<br>
+          2. Klik pada peta atau di ujung pipa.<br>
+          3. Aksesori yang terpasang dapat digeser (drag) posisinya.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL 3: PROPERTI ELEMEN ── -->
+    <div id="panel-prop" class="sidebar-panel" style="display:none;">
+      <div id="prop-content">
+        <div class="prop-card" style="text-align:center;padding:24px 14px;">
+          <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+          <div style="font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">Belum Ada Elemen Dipilih</div>
+          <p style="font-size:11px;color:#94a3b8;line-height:1.5;">
+            Klik pada garis pipa atau simbol aksesori di peta untuk memeriksa detail spesifikasi, panjang, tekanan, dan mengedit propertinya.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- ══ NORMAL MAP CONTAINER (Editor Mode) ══ -->
+  <div id="map-container">
+    <div id="map"></div>
+
+    <!-- PETA SITUASI Badge on Map (Bottom-Left) -->
+    <div class="viewport-badge-situasi">
+      <span class="sq-icon"></span>
+      <span>PETA SITUASI</span>
+    </div>
+
+    <!-- North Arrow Badge (Top-Right) -->
+    <div class="viewport-north-box">
+      <svg viewBox="0 0 32 40" width="28" height="36">
+        <polygon points="16,2 22,20 16,16 10,20" fill="#000" stroke="#000" stroke-width="1"/>
+        <polygon points="16,38 22,20 16,24 10,20" fill="#fff" stroke="#000" stroke-width="1"/>
+        <text x="16" y="0" font-size="10" font-weight="900" text-anchor="middle" font-family="Arial,sans-serif">U</text>
+      </svg>
+    </div>
+
+    <!-- Floating Drawing Toolbar -->
+    <div id="drawing-toolbar" class="floating-toolbar" style="display:none;">
+      <span class="draw-info">
+        <span id="dt-mat" style="color:#38bdf8;">PVC</span> &bull; 
+        <span id="dt-nodes">0</span> titik &bull; 
+        <span id="dt-length">0.0</span> m
+      </span>
+      <button class="tool-btn finish" onclick="finishPipe()" title="Selesai (Tekan Enter / Klik Kanan)">✓ Selesai</button>
+      <button class="tool-btn undo" onclick="undoLastPoint()" title="Undo Titik (Backspace / Ctrl+Z)">↺ Undo</button>
+      <button class="tool-btn cancel" onclick="cancelDrawing()" title="Batal (Esc)">✕ Batal</button>
+    </div>
+
+    <!-- Legend (Floating in Editor Mode) -->
+    <div id="legend">
+      <div class="legend-header" onclick="toggleLegend()">
+        <h4>ℹ Legenda Jaringan</h4>
+        <span id="leg-toggle-icon" style="font-size:12px;color:#7dd3fc;">−</span>
+      </div>
+      <div class="legend-body">
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;margin:8px 0 4px;" id="leg-mat-label">Pipa PVC:</div>
+        <div id="legend-pipes"></div>
+        <hr class="leg-divider">
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:6px;">Aksesori & Fitting:</div>
+        <div id="legend-acc"></div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="statusbar">
+      <div class="stat">Mode: <span class="stat-val" id="st-mode">Gambar Pipa</span></div>
+      <div class="stat">Pipa: <span class="stat-val" id="st-pipes">0</span> segmen</div>
+      <div class="stat">PVC: <span class="stat-val" id="st-pvc-len">0</span> m</div>
+      <div class="stat">HDPE: <span class="stat-val" id="st-hdpe-len">0</span> m</div>
+      <div class="stat">Aksesori: <span class="stat-val" id="st-acc">0</span></div>
+      <div class="stat" id="st-coord" style="margin-left:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SHEET CONTAINER: GAMBAR KERJA + KOP GAMBAR (A3 / A4 Paper)
+       ═══════════════════════════════════════════════════════════ -->
+  <div id="sheet-container">
+    <div id="drawing-sheet" class="sheet-paper">
+      <div class="sheet-outer-frame">
+        <div class="sheet-inner-frame">
+
+          <!-- KIRI: GAMBAR KERJA (Viewport Peta Terpusat) -->
+          <div class="sheet-left-pane">
+            <div id="map-mount"></div>
+          </div>
+
+          <!-- KANAN: KOP GAMBAR (Etiket Standar PU / PDAM) -->
+          <div class="sheet-right-pane" id="kop-pane">
+
+            <!-- 1. KETERANGAN & DETAIL STANDAR -->
+            <div class="kop-box" style="flex: 0 0 auto;">
+              <div class="kop-title-bar">KETERANGAN</div>
+              
+              <div class="trench-detail-row">
+                <!-- Compass Rose -->
+                <div style="text-align:center;width:32px;flex-shrink:0;">
+                  <svg viewBox="0 0 32 40" width="24" height="32">
+                    <polygon points="16,2 21,18 16,14 11,18" fill="#000" stroke="#000" stroke-width="0.8"/>
+                    <polygon points="16,36 21,18 16,22 11,18" fill="#fff" stroke="#000" stroke-width="0.8"/>
+                    <text x="16" y="0" font-size="9" font-weight="900" text-anchor="middle" font-family="Arial,sans-serif">U</text>
+                  </svg>
+                </div>
+                
+                <!-- Cross Section Trench SVG Diagram (Compact) -->
+                <div style="flex:1;">
+                  <svg viewBox="0 0 130 46" width="100%" height="46" style="border:1px solid #000;background:#fafafa;">
+                    <line x1="0" y1="8" x2="130" y2="8" stroke="#000" stroke-width="1.2"/>
+                    <text x="65" y="6" font-size="5" text-anchor="middle" font-weight="bold">MUKA TANAH / JALAN</text>
+                    <rect x="18" y="8" width="94" height="34" fill="none" stroke="#000" stroke-dasharray="2,2"/>
+                    <text x="65" y="15" font-size="5" text-anchor="middle" fill="#555">URUGAN TANAH</text>
+                    <rect x="18" y="20" width="94" height="22" fill="#fef08a" opacity="0.6"/>
+                    <text x="65" y="26" font-size="5" text-anchor="middle" fill="#000">PASIR 10cm</text>
+                    <circle cx="65" cy="33" r="5.5" fill="#0284c7" stroke="#000" stroke-width="1"/>
+                    <text x="65" y="35" font-size="4.8" font-weight="bold" fill="#fff" text-anchor="middle">Ø pipa</text>
+                    <line x1="120" y1="8" x2="120" y2="42" stroke="#000" stroke-width="0.7"/>
+                    <line x1="117" y1="8" x2="123" y2="8" stroke="#000" stroke-width="0.7"/>
+                    <line x1="117" y1="42" x2="123" y2="42" stroke-width="0.7"/>
+                    <text x="125" y="27" font-size="5.5" font-weight="bold">H</text>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Tabel Standar Kedalaman Galian (H / H Bina Marga) -->
+              <table class="galian-table">
+                <thead>
+                  <tr>
+                    <th>NO</th>
+                    <th>Ø PIPA</th>
+                    <th>H (Cm)</th>
+                    <th>H BM (Cm)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>1</td><td>50 mm (2")</td><td>50</td><td>70</td></tr>
+                  <tr><td>2</td><td>75 mm (3")</td><td>60</td><td>80</td></tr>
+                  <tr><td>3</td><td>100 mm (4")</td><td>70</td><td>90</td></tr>
+                  <tr><td>4</td><td>150 mm (6")</td><td>70</td><td>90</td></tr>
+                  <tr><td>5</td><td>200 mm (8")</td><td>80</td><td>100</td></tr>
+                  <tr><td>6</td><td>250 mm (10")</td><td>80</td><td>100</td></tr>
+                  <tr><td>7</td><td>300 mm (12")</td><td>80</td><td>100</td></tr>
+                  <tr><td>8</td><td>350 mm (14")</td><td>80</td><td>100</td></tr>
+                </tbody>
+              </table>
+
+              <!-- Legenda Warna Diameter Pipa -->
+              <div class="kop-legend-grid" id="kop-legend-list"></div>
+            </div>
+
+            <!-- 2. LOGO & NAMA INSTANSI PERUMDA -->
+            <div class="kop-box kop-instansi-box">
+              <div style="display:flex;justify-content:center;margin-bottom:3px;">
+                <img src="logo.jpg" alt="Logo Perumda Tirta Rangga" style="height:44px;width:auto;object-fit:contain;display:block;" />
+              </div>
+              <div class="kop-instansi-nama" id="kop-view-instansi-nama">
+                PERUSAHAAN UMUM DAERAH AIR MINUM TIRTA RANGGA KABUPATEN SUBANG
+              </div>
+              <div class="kop-instansi-sub" id="kop-view-instansi-alamat">
+                Jalan Darmodiharjo No. 2 Kabupaten Subang Jawa Barat<br>
+                Telp. (0260) 412 052 &bull; Website: www.tirtarangga.com
+              </div>
+            </div>
+
+            <!-- 3. KEGIATAN -->
+            <div class="kop-box">
+              <div class="kop-sec-label">KEGIATAN :</div>
+              <div class="kop-proj-text" id="kop-view-kegiatan">
+                PROGRAM INVESTASI PENGADAAN BARANG/JASA DI LINGKUNGAN PERUMDA TIRTA RANGGA KABUPATEN SUBANG
+              </div>
+            </div>
+
+            <!-- 4. PEKERJAAN -->
+            <div class="kop-box">
+              <div class="kop-sec-label">PEKERJAAN :</div>
+              <div class="kop-proj-text" id="kop-view-pekerjaan">
+                PEMASANGAN SAMBUNGAN LANGGANAN BARU PERUMAHAN GRAHA PURWADADI VILLAGE 2
+              </div>
+            </div>
+
+            <!-- 5. LOKASI -->
+            <div class="kop-box">
+              <div class="kop-sec-label">LOKASI :</div>
+              <div style="font-size:8px;line-height:1.3;font-weight:600;" id="kop-view-lokasi">
+                &bull; RT / RW : <span id="kv-rt">-</span><br>
+                &bull; DESA / KELURAHAN : <span id="kv-desa">-</span><br>
+                &bull; KECAMATAN : <span id="kv-kec" style="font-weight:800;">PURWADADI</span><br>
+                &bull; KABUPATEN : <span id="kv-kab" style="font-weight:800;">SUBANG</span>
+              </div>
+            </div>
+
+            <!-- 6. JUDUL GAMBAR -->
+            <div class="kop-box" style="text-align:center;">
+              <div class="kop-sec-label">JUDUL GAMBAR :</div>
+              <div class="kop-main-title" id="kop-view-judul">PETA SITUASI</div>
+            </div>
+
+            <!-- 7. PENGESAHAN (DIPERIKSA, MENGETAHUI, MENGESAHKAN) -->
+            <div class="kop-box" style="flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:0;">
+              
+              <!-- 7A: Diperiksa Oleh -->
+              <div class="kop-sign-col">
+                <div class="kop-sign-role" id="kop-view-pemeriksa-jabatan">
+                  DIPERIKSA OLEH :<br>ASISTEN MANAJER PERPIPAAN
+                </div>
+                <div class="kop-sign-name" id="kop-view-pemeriksa-nama">YUNIA RACHMAWATI</div>
+                <div class="kop-sign-nip" id="kop-view-pemeriksa-nip">NIPP. 942 207 301</div>
+              </div>
+
+              <!-- 7B: Mengetahui -->
+              <div class="kop-sign-col">
+                <div class="kop-sign-role" id="kop-view-mengetahui-jabatan">
+                  MENGETAHUI :<br>MANAJER DIVISI PERENCANAAN TEKNIK
+                </div>
+                <!-- Signature mark SVG -->
+                <div class="kop-sign-img-box">
+                  <svg viewBox="0 0 100 24" width="70" height="20">
+                    <path d="M10 18 Q20 5 35 12 T60 8 T85 15 Q95 20 70 20 T30 18" fill="none" stroke="#000" stroke-width="1.3"/>
+                  </svg>
+                </div>
+                <div class="kop-sign-name" id="kop-view-mengetahui-nama">DADI RISWADI</div>
+                <div class="kop-sign-nip" id="kop-view-mengetahui-nip">NIPP. 760 511 183</div>
+              </div>
+
+              <!-- 7C: Mengesahkan -->
+              <div class="kop-sign-col" style="border-bottom:none;">
+                <div class="kop-sign-role" id="kop-view-pengesah-jabatan">
+                  MENGESAHKAN :<br>DIREKTUR BIDANG TEKNIK
+                </div>
+                <div class="kop-sign-name" id="kop-view-pengesah-nama">NANA RUHANA, ST</div>
+              </div>
+
+            </div>
+
+            <!-- 8. METADATA GAMBAR (Tanggal, Skala, No Gambar) -->
+            <div class="kop-meta-grid">
+              <div class="kop-meta-cell">
+                <div class="kop-meta-label">Tanggal</div>
+                <div class="kop-meta-val" id="kop-view-tanggal">21 Oktober 2026</div>
+              </div>
+              <div class="kop-meta-cell">
+                <div class="kop-meta-label">Skala</div>
+                <div class="kop-meta-val" id="kop-view-skala">1 : 1.000</div>
+              </div>
+              <div class="kop-meta-cell">
+                <div class="kop-meta-label">Nomor Gambar</div>
+                <div class="kop-meta-val" id="kop-view-no-gambar">01</div>
+              </div>
+              <div class="kop-meta-cell">
+                <div class="kop-meta-label">Jumlah Gambar</div>
+                <div class="kop-meta-val" id="kop-view-jml-gambar">01</div>
+              </div>
+            </div>
+
+          </div><!-- /sheet-right-pane -->
+
+        </div><!-- /sheet-inner-frame -->
+      </div><!-- /sheet-outer-frame -->
+    </div><!-- /drawing-sheet -->
+  </div><!-- /sheet-container -->
+
+</div><!-- /main -->
+
+<!-- ═══ FLOATING LAYOUT TOOLBAR ═══ -->
+<div id="layout-toolbar">
+  <div style="font-weight:800;color:#f8fafc;font-size:12px;display:flex;align-items:center;gap:6px;">
+    <span>📐 Gambar Kerja & Kop</span>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;">
+    <button class="lt-btn print" onclick="printDrawingSheet()" title="Cetak ke Printer / Simpan PDF">
+      🖨️ Cetak / PDF
+    </button>
+    <button class="lt-btn primary" onclick="openKopModal()" title="Edit Teks Kop Gambar">
+      ✏️ Edit Kop
+    </button>
+    <button class="lt-btn info" onclick="fitNetworkInView()" title="Pusatkan Seluruh Pipa di Kertas">
+      🎯 Pusatkan
+    </button>
+    <button class="lt-btn info" onclick="togglePipeLabels()" id="btn-toggle-labels">
+      🏷️ Label: ON
+    </button>
+    <button class="lt-btn close" onclick="exitLayoutMode()" title="Kembali ke Mode Gambar Interaktif">
+      ✕ Kembali
+    </button>
+  </div>
+</div>
+
+<!-- ═══ EDIT DATA KOP MODAL ═══ -->
+<div class="modal-overlay" id="kop-modal">
+  <div class="modal-box" style="width: 580px; max-width: 95vw; max-height: 88vh; overflow-y: auto;">
+    <h3>✏️ Edit Data Kop Gambar (Etiket)</h3>
+    
+    <label>Nama Instansi / PDAM / Perusahaan</label>
+    <input type="text" id="km-instansi-nama" />
+
+    <label>Alamat & Kontak Instansi</label>
+    <textarea id="km-instansi-alamat" rows="2"></textarea>
+
+    <label>Nama Kegiatan</label>
+    <input type="text" id="km-kegiatan" />
+
+    <label>Nama Pekerjaan</label>
+    <textarea id="km-pekerjaan" rows="2"></textarea>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label>RT / RW</label>
+        <input type="text" id="km-rt" />
+      </div>
+      <div>
+        <label>Desa / Kelurahan</label>
+        <input type="text" id="km-desa" />
+      </div>
+      <div>
+        <label>Kecamatan</label>
+        <input type="text" id="km-kec" />
+      </div>
+      <div>
+        <label>Kabupaten / Kota</label>
+        <input type="text" id="km-kab" />
+      </div>
+    </div>
+
+    <label>Judul Gambar</label>
+    <input type="text" id="km-judul" />
+
+    <hr style="border:none;border-top:1px solid #334155;margin:10px 0;">
+    <div style="font-weight:700;color:#38bdf8;font-size:12px;margin-bottom:6px;">Pejabat & Pengesahan:</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label>Diperiksa Oleh (Jabatan)</label>
+        <input type="text" id="km-pemeriksa-jabatan" />
+      </div>
+      <div>
+        <label>Nama & NIPP Pemeriksa</label>
+        <input type="text" id="km-pemeriksa-nama" placeholder="Nama Lengkap" />
+        <input type="text" id="km-pemeriksa-nip" placeholder="NIPP. ..." />
+      </div>
+
+      <div>
+        <label>Mengetahui (Jabatan)</label>
+        <input type="text" id="km-mengetahui-jabatan" />
+      </div>
+      <div>
+        <label>Nama & NIPP Mengetahui</label>
+        <input type="text" id="km-mengetahui-nama" placeholder="Nama Lengkap" />
+        <input type="text" id="km-mengetahui-nip" placeholder="NIPP. ..." />
+      </div>
+
+      <div>
+        <label>Mengesahkan (Jabatan)</label>
+        <input type="text" id="km-pengesah-jabatan" />
+      </div>
+      <div>
+        <label>Nama Pejabat Mengesahkan</label>
+        <input type="text" id="km-pengesah-nama" placeholder="Nama Lengkap, Gelar" />
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #334155;margin:10px 0;">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label>Tanggal Gambar</label>
+        <input type="text" id="km-tanggal" />
+      </div>
+      <div>
+        <label>Skala</label>
+        <input type="text" id="km-skala" />
+      </div>
+      <div>
+        <label>Nomor Gambar</label>
+        <input type="text" id="km-no-gambar" />
+      </div>
+      <div>
+        <label>Jumlah Lembar</label>
+        <input type="text" id="km-jml-gambar" />
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeKopModal()">Batal</button>
+      <button class="modal-btn primary" onclick="saveKopModal()">Simpan Data Kop</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PIPE EDIT MODAL ═══ -->
+<div class="modal-overlay" id="pipe-modal">
+  <div class="modal-box">
+    <h3>✏️ Edit Properti Pipa</h3>
+    <label>Nama / ID Pipa</label>
+    <input type="text" id="pm-name" placeholder="Misal: Pipa Distribusi Utama" />
+    <label>Material Pipa</label>
+    <select id="pm-material" onchange="onModalMaterialChange()">
+      <option value="PVC">PVC (Polyvinyl Chloride)</option>
+      <option value="HDPE">HDPE (High-Density Polyethylene)</option>
+      <option value="GI">GI (Galvanized Iron)</option>
+      <option value="DI">DI (Ductile Iron)</option>
+      <option value="Steel">Steel</option>
+    </select>
+    <label>Diameter Pipa</label>
+    <select id="pm-diam" onchange="onModalDiamChange()"></select>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label>Tipe Garis</label>
+        <select id="pm-line-style" onchange="updateModalLinePreview()">
+          <option value="solid">── Solid (Menerus)</option>
+          <option value="dot">•• Dot (Titik-titik)</option>
+          <option value="dash">-- Dash (Putus-putus)</option>
+        </select>
+      </div>
+      <div>
+        <label>Ketebalan Garis (px)</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="range" id="pm-line-weight" min="2" max="24" step="1" style="flex:1;accent-color:#38bdf8;" oninput="document.getElementById('pm-weight-val').textContent = this.value + ' px'; updateModalLinePreview();" />
+          <span id="pm-weight-val" style="font-weight:bold;color:#38bdf8;font-size:11px;min-width:38px;">6 px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Line Preview Bar -->
+    <div style="background:#0f172a;border-radius:6px;padding:6px 10px;margin:6px 0 10px;border:1px solid #334155;text-align:center;">
+      <svg viewBox="0 0 220 16" width="100%" height="16">
+        <line id="pm-preview-line" x1="10" y1="8" x2="210" y2="8" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <label>🏷️ Notasi Keterangan di Peta (Callout)</label>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <input type="text" id="pm-callout" placeholder="Biarkan kosong untuk otomatis standar..." style="flex:1;" />
+      <button type="button" class="modal-btn secondary" style="padding:4px 8px;font-size:11px;" onclick="document.getElementById('pm-callout').value = ''">Otomatis</button>
+    </div>
+
+    <label>Tekanan Desain (bar)</label>
+    <input type="number" id="pm-pressure" placeholder="Misal: 4" step="0.5" />
+    <label>Tahun Pemasangan</label>
+    <input type="number" id="pm-year" placeholder="Misal: 2024" />
+    <label>Catatan</label>
+    <textarea id="pm-notes" rows="2" placeholder="Keterangan tambahan..."></textarea>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closePipeModal()">Batal</button>
+      <button class="modal-btn primary" onclick="savePipeModal()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT CALLOUT MODAL ═══ -->
+<div class="modal-overlay" id="callout-modal">
+  <div class="modal-box" style="width: 480px; max-width: 95vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h3 style="margin:0;">🏷️ Edit Notasi Keterangan Pipa</h3>
+      <button onclick="closeCalloutModal()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:10px;line-height:1.4;">
+      Sesuaikan teks notasi yang terhubung dengan tanda panah ke jalur pipa:
+    </div>
+
+    <label>Deskripsi Notasi Pipa:</label>
+    <textarea id="cm-text" rows="3" style="width:100%;font-size:13px;padding:8px 10px;border-radius:6px;background:#0f172a;border:1px solid #334155;color:#f8fafc;font-family:Arial,sans-serif;" placeholder="Contoh: Renc. Pipa PVC Ø 4&quot; - 120 m'"></textarea>
+    
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+      <button type="button" class="modal-btn secondary" style="font-size:11px;padding:6px 10px;" onclick="resetCalloutToAuto()">
+        ↺ Gunakan Format Standar Otomatis
+      </button>
+      <button type="button" class="modal-btn secondary" style="font-size:11px;padding:6px 10px;" onclick="resetCalloutPosition()">
+        🎯 Reset Posisi Panah ke Garis
+      </button>
+    </div>
+
+    <div class="help-hint" style="margin-top:12px;font-size:11px;">
+      💡 <strong>Petunjuk:</strong> Anda dapat menggeser (*drag*) kotak notasi langsung pada peta untuk memindahkan posisinya agar tidak bertumpukan dengan jalan atau objek lain. Garis petunjuk dan tanda panah akan otomatis mengarah ke pipa.
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="modal-btn secondary" onclick="closeCalloutModal()">Batal</button>
+      <button class="modal-btn primary" onclick="saveCalloutModal()">Simpan Notasi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ACC EDIT MODAL ═══ -->
+<div class="modal-overlay" id="acc-modal">
+  <div class="modal-box">
+    <h3>⚙️ Edit Properti Aksesori</h3>
+    <label>Nama / ID Aksesori</label>
+    <input type="text" id="am-name" placeholder="Misal: GV-001" />
+    <label>Tipe Aksesori</label>
+    <select id="am-type"></select>
+    <label>Ukuran Diameter (mm)</label>
+    <input type="number" id="am-size" placeholder="Misal: 100" />
+    <label>Status Operasional</label>
+    <select id="am-status">
+      <option value="Aktif">Aktif</option>
+      <option value="Tertutup (Standby)">Tertutup (Standby)</option>
+      <option value="Maintenance">Maintenance</option>
+      <option value="Rusak / Perlu Penggantian">Rusak / Perlu Penggantian</option>
+    </select>
+    <label>Tahun Pemasangan</label>
+    <input type="number" id="am-year" placeholder="Misal: 2024" />
+    <label>Catatan</label>
+    <textarea id="am-notes" rows="2" placeholder="Keterangan lokasi/kondisi..."></textarea>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeAccModal()">Batal</button>
+      <button class="modal-btn primary" onclick="saveAccModal()">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BOQ / REKAPITULASI MODAL ═══ -->
+<div class="modal-overlay" id="boq-modal">
+  <div class="modal-box" style="width: 580px; max-width: 95vw; max-height: 85vh; overflow-y: auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h3 style="margin:0;">📊 Rekapitulasi Material (BOQ)</h3>
+      <button onclick="closeBOQModal()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <div id="boq-content"></div>
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="modal-btn secondary" onclick="closeBOQModal()">Tutup</button>
+      <button class="modal-btn primary" onclick="exportBOQtoCSV()">📥 Unduh File CSV (Excel)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for import -->
+<input type="file" id="file-input" accept=".json,.geojson" style="display:none" onchange="handleFileImport(event)" />
+
+<!-- Leaflet JS (local) -->
+<script src="lib/leaflet.js"></script>
+<script>
+  L.Icon.Default.imagePath = 'lib/images/';
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIG: Pipe Catalogs (PVC & HDPE) with Distinct Colors
+// ═══════════════════════════════════════════════════════════════════
+const PIPE_CATALOG = {
+  PVC: [
+    { mm: 20,  inch: '1/2"',   color: '#FF8A80', weight: 4,  label: '1/2" (20 mm)' },
+    { mm: 25,  inch: '3/4"',   color: '#FF5252', weight: 4,  label: '3/4" (25 mm)' },
+    { mm: 32,  inch: '1"',     color: '#FF9E80', weight: 5,  label: '1" (32 mm)' },
+    { mm: 40,  inch: '1 1/4"', color: '#FFAB40', weight: 5,  label: '1 1/4" (40 mm)' },
+    { mm: 50,  inch: '1 1/2"', color: '#FFD740', weight: 6,  label: '1 1/2" (50 mm)' },
+    { mm: 63,  inch: '2"',     color: '#EEFF41', weight: 7,  label: '2" (63 mm)' },
+    { mm: 75,  inch: '2 1/2"', color: '#CCFF90', weight: 8,  label: '2 1/2" (75 mm)' },
+    { mm: 90,  inch: '3"',     color: '#69F0AE', weight: 9,  label: '3" (90 mm)' },
+    { mm: 110, inch: '4"',     color: '#00E676', weight: 10, label: '4" (110 mm)' },
+    { mm: 160, inch: '6"',     color: '#40C4FF', weight: 12, label: '6" (160 mm)' },
+    { mm: 200, inch: '8"',     color: '#7C4DFF', weight: 14, label: '8" (200 mm)' },
+    { mm: 250, inch: '10"',    color: '#EA80FC', weight: 16, label: '10" (250 mm)' },
+    { mm: 315, inch: '12"',    color: '#FF4081', weight: 18, label: '12" (315 mm)' }
+  ],
+  HDPE: [
+    { mm: 25,  inch: '3/4"',   color: '#FF5252', weight: 4,  label: 'OD 25 mm (3/4")' },
+    { mm: 32,  inch: '1"',     color: '#FF9E80', weight: 5,  label: 'OD 32 mm (1")' },
+    { mm: 50,  inch: '1 1/2"', color: '#FFD740', weight: 6,  label: 'OD 50 mm (1 1/2")' },
+    { mm: 63,  inch: '2"',     color: '#EEFF41', weight: 7,  label: 'OD 63 mm (2")' },
+    { mm: 75,  inch: '2 1/2"', color: '#CCFF90', weight: 8,  label: 'OD 75 mm (2 1/2")' },
+    { mm: 90,  inch: '3"',     color: '#69F0AE', weight: 9,  label: 'OD 90 mm (3")' },
+    { mm: 110, inch: '4"',     color: '#00E676', weight: 10, label: 'OD 110 mm (4")' },
+    { mm: 160, inch: '6"',     color: '#40C4FF', weight: 12, label: 'OD 160 mm (6")' },
+    { mm: 200, inch: '8"',     color: '#7C4DFF', weight: 14, label: 'OD 200 mm (8")' },
+    { mm: 250, inch: '10"',    color: '#EA80FC', weight: 16, label: 'OD 250 mm (10")' },
+    { mm: 315, inch: '12"',    color: '#FF4081', weight: 18, label: 'OD 315 mm (12")' },
+    { mm: 400, inch: '16"',    color: '#00E5FF', weight: 20, label: 'OD 400 mm (16")' },
+    { mm: 500, inch: '20"',    color: '#FF6E40', weight: 22, label: 'OD 500 mm (20")' }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIG: Relevant Water Pipeline Accessories with Technical SVGs
+// ═══════════════════════════════════════════════════════════════════
+const ACCESSORIES = [
+  {
+    id: 'gate_valve',
+    label: 'Gate Valve',
+    subtitle: 'Katup Sorong',
+    color: '#1E88E5',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="6" y1="4" x2="18" y2="4" stroke-width="2.2"/>
+      <line x1="12" y1="4" x2="12" y2="13" stroke-width="2"/>
+      <polygon points="4,9 12,14 4,19" fill="#ffffff" stroke="#ffffff" stroke-width="1.2"/>
+      <polygon points="20,9 12,14 20,19" fill="#ffffff" stroke="#ffffff" stroke-width="1.2"/>
+    </svg>`
+  },
+  {
+    id: 'air_valve',
+    label: 'Air Valve',
+    subtitle: 'Pelepas Udara',
+    color: '#FBC02D',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="16.5" width="14" height="2.8" rx="1" fill="#ffffff"/>
+      <line x1="12" y1="16.5" x2="12" y2="12" stroke-width="2"/>
+      <path d="M7 12 C7 7.5, 17 7.5, 17 12 Z" fill="#ffffff"/>
+      <path d="M9.5 5.5 L12 2.5 L14.5 5.5" stroke="#ffffff" stroke-width="1.8"/>
+      <line x1="12" y1="2.5" x2="12" y2="8" stroke-width="1.8"/>
+    </svg>`
+  },
+  {
+    id: 'check_valve',
+    label: 'Check Valve',
+    subtitle: 'Katup Searah',
+    color: '#2E7D32',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="4,8 12,14 4,20" fill="#ffffff" stroke="#ffffff" stroke-width="1"/>
+      <polygon points="20,8 12,14 20,20" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <line x1="12" y1="8" x2="17.5" y2="14" stroke-width="2.4"/>
+    </svg>`
+  },
+  {
+    id: 'prv',
+    label: 'PRV',
+    subtitle: 'Pengatur Tekanan',
+    color: '#E64A19',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="4,11 12,15 4,19" fill="#ffffff" stroke="#ffffff"/>
+      <polygon points="20,11 12,15 20,19" fill="#ffffff" stroke="#ffffff"/>
+      <line x1="12" y1="15" x2="12" y2="8.5" stroke-width="2"/>
+      <rect x="7" y="6" width="10" height="2.5" rx="1" fill="#ffffff"/>
+      <path d="M12 2.5 L9 5.5 M12 2.5 L15 5.5" stroke="#ffffff" stroke-width="1.8"/>
+    </svg>`
+  },
+  {
+    id: 'meter',
+    label: 'Water Meter',
+    subtitle: 'Meter Air Induk',
+    color: '#00897B',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="2" y1="12" x2="6" y2="12" stroke-width="2.5"/>
+      <line x1="18" y1="12" x2="22" y2="12" stroke-width="2.5"/>
+      <line x1="5.5" y1="8.5" x2="5.5" y2="15.5" stroke-width="2"/>
+      <line x1="18.5" y1="8.5" x2="18.5" y2="15.5" stroke-width="2"/>
+      <circle cx="12" cy="12" r="5.5" fill="#ffffff" stroke="#ffffff" stroke-width="1"/>
+      <text x="12" y="15.2" font-size="8.5" font-weight="900" text-anchor="middle" fill="#00897B" font-family="Arial,sans-serif">M</text>
+    </svg>`
+  },
+  {
+    id: 'hydrant',
+    label: 'Hydrant',
+    subtitle: 'Pilar Hidran',
+    color: '#D32F2F',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="#ffffff">
+      <path d="M9 7 C9 4.5, 15 4.5, 15 7 Z"/>
+      <rect x="9" y="7" width="6" height="11"/>
+      <rect x="5.5" y="10" width="3.5" height="4" rx="1"/>
+      <rect x="15" y="10" width="3.5" height="4" rx="1"/>
+      <rect x="7" y="18" width="10" height="2.5" rx="1"/>
+    </svg>`
+  },
+  {
+    id: 'junction',
+    label: 'Tee Joint',
+    subtitle: 'Percabangan T',
+    color: '#455A64',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round">
+      <line x1="4" y1="15" x2="20" y2="15"/>
+      <line x1="12" y1="15" x2="12" y2="5"/>
+      <line x1="4" y1="12" x2="4" y2="18" stroke-width="2"/>
+      <line x1="20" y1="12" x2="20" y2="18" stroke-width="2"/>
+      <line x1="9" y1="5" x2="15" y2="5" stroke-width="2"/>
+      <circle cx="12" cy="15" r="2" fill="#ffffff"/>
+    </svg>`
+  },
+  {
+    id: 'reservoir',
+    label: 'Reservoir',
+    subtitle: 'Tandon / Bak Air',
+    color: '#0288D1',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round">
+      <rect x="5" y="6" width="14" height="13" rx="2" stroke-width="2"/>
+      <line x1="4" y1="6" x2="20" y2="6" stroke-width="2.5"/>
+      <path d="M7 11 Q9.5 9.5 12 11 T17 11" stroke-width="1.8"/>
+      <path d="M7 15 Q9.5 13.5 12 15 T17 15" stroke-width="1.8"/>
+    </svg>`
+  },
+  {
+    id: 'pump',
+    label: 'Pompa Air',
+    subtitle: 'Booster Pump',
+    color: '#8E24AA',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="13" r="6.8" stroke-width="2"/>
+      <polygon points="8.5,16.5 16,13 8.5,9.5" fill="#ffffff"/>
+      <line x1="18.8" y1="13" x2="22" y2="13" stroke-width="2.5"/>
+      <line x1="12" y1="4" x2="12" y2="6.2" stroke-width="2"/>
+    </svg>`
+  },
+  {
+    id: 'elbow',
+    label: 'Elbow 90°',
+    subtitle: 'Belokan Pipa',
+    color: '#689F38',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round">
+      <path d="M6 18 L12 18 A6 6 0 0 0 18 12 L18 6"/>
+      <line x1="6" y1="15" x2="6" y2="21" stroke-width="2"/>
+      <line x1="15" y1="6" x2="21" y2="6" stroke-width="2"/>
+    </svg>`
+  },
+  {
+    id: 'tapping',
+    label: 'Clamp Saddle',
+    subtitle: 'Sadap Sambungan',
+    color: '#F57C00',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round">
+      <line x1="3" y1="15" x2="21" y2="15" stroke-width="2.5"/>
+      <path d="M7 15 C7 11.2, 17 11.2, 17 15" stroke-width="2.5"/>
+      <line x1="6" y1="17.5" x2="18" y2="17.5" stroke-width="2"/>
+      <line x1="12" y1="11.2" x2="12" y2="5" stroke-width="2.5"/>
+      <line x1="9" y1="5" x2="15" y2="5" stroke-width="2"/>
+    </svg>`
+  },
+  {
+    id: 'blowoff',
+    label: 'Washout',
+    subtitle: 'Katup Penguras',
+    color: '#00ACC1',
+    svg: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 10 L14 10 L14 16.5" stroke-width="2.5"/>
+      <polygon points="7,7 11,10 7,13" fill="#ffffff"/>
+      <circle cx="14" cy="19.5" r="1.3" fill="#ffffff"/>
+    </svg>`
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════════
+//  DEFAULT KOP DATA (Based on Tirta Rangga Subang Water Utility)
+// ═══════════════════════════════════════════════════════════════════
+const DEFAULT_KOP_DATA = {
+  instansi_nama: 'PERUSAHAAN UMUM DAERAH AIR MINUM TIRTA RANGGA KABUPATEN SUBANG',
+  instansi_alamat: 'Jalan Darmodiharjo No. 2 Kabupaten Subang Provinsi Jawa Barat - Indonesia\nTelp. (0260) 412 052, Fax. (0260) 412 301 • Website: www.tirtarangga.com Email: perumdatrs@tirtarangga.com',
+  kegiatan: 'PROGRAM INVESTASI PENGADAAN BARANG/JASA DI LINGKUNGAN PERUMDA TIRTA RANGGA KABUPATEN SUBANG',
+  pekerjaan: 'PEMASANGAN SAMBUNGAN LANGGANAN BARU PERUMAHAN GRAHA PURWADADI VILLAGE 2',
+  rt: '-',
+  desa: '-',
+  kec: 'PURWADADI',
+  kab: 'SUBANG',
+  judul: 'PETA SITUASI',
+  pemeriksa_jabatan: 'DIPERIKSA OLEH :\nASISTEN MANAJER PERPIPAAN\nPERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG',
+  pemeriksa_nama: 'YUNIA RACHMAWATI',
+  pemeriksa_nip: 'NIPP. 942 207 301',
+  mengetahui_jabatan: 'MENGETAHUI :\nMANAJER DIVISI PERENCANAAN TEKNIK\nPERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG',
+  mengetahui_nama: 'DADI RISWADI',
+  mengetahui_nip: 'NIPP. 760 511 183',
+  pengesah_jabatan: 'MENGESAHKAN :\nDIREKTUR BIDANG TEKNIK\nPERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG',
+  pengesah_nama: 'NANA RUHANA, ST',
+  tanggal: '21 Oktober 2026',
+  skala: '1 : 1.000',
+  no_gambar: '01',
+  jml_gambar: '01'
+};
+
+let kopData = { ...DEFAULT_KOP_DATA };
+
+// ═══════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════
+let map;
+let currentMode       = 'pipe';
+let currentMaterial   = 'PVC';
+let selectedDiamIdx   = 8; // default 4" (110 mm) for PVC
+let selectedAcc       = ACCESSORIES[0]; // default Gate Valve
+let currentLineStyle  = 'solid';        // 'solid' | 'dot' | 'dash'
+let currentLineWeight = 10;             // default for 4" (110 mm)
+let isAutoWeight      = true;           // auto-tracks diameter weight
+let pipes             = [];
+let accessories       = [];
+let drawingPipe       = false;
+let pipePoints        = [];
+let tempLine          = null;
+let measurePoints     = [];
+let measureLine       = null;
+let measureMarkers    = [];
+let editingPipeId     = null;
+let editingAccId      = null;
+let nextId            = 1;
+let selectedPipeObj   = null;
+let vertexMarkers     = [];
+let snapGuideMarker   = null;
+let pipeLabelMarkers     = [];
+let pipeLeaderLines      = [];
+let editingCalloutPipeId = null;
+let showPipeLabels       = true;
+let isLayoutMode         = false;
+
+// ═══════════════════════════════════════════════════════════════════
+//  INIT MAP
+// ═══════════════════════════════════════════════════════════════════
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView([-6.2088, 106.8456], 14);
+
+  // ─── Google Maps Tile Layers ────────────────────────────────────
+  const googleRoadmap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps'
+  });
+  const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps Satellite Hybrid'
+  });
+  const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps Satellite'
+  });
+  const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+    maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps Terrain'
+  });
+  const googleTraffic = L.tileLayer('https://{s}.google.com/vt/lyrs=m,traffic&x={x}&y={y}&z={z}', {
+    maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps Traffic'
+  });
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20, attribution: '© OpenStreetMap contributors'
+  });
+
+  googleRoadmap.addTo(map);
+
+  L.control.layers({
+    '🗺️ Google Maps (Jalan)': googleRoadmap,
+    '🛰️ Google Maps (Satelit Hybrid)': googleHybrid,
+    '🌍 Google Maps (Satelit Murni)': googleSatellite,
+    '🏔️ Google Maps (Medan / Terrain)': googleTerrain,
+    '🚦 Google Maps (Traffic)': googleTraffic,
+    '🌐 OpenStreetMap': osm
+  }, {}, { position: 'topright' }).addTo(map);
+
+  L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
+
+  snapGuideMarker = L.marker([0, 0], {
+    icon: L.divIcon({ className: 'snap-indicator', iconSize: [22, 22], iconAnchor: [11, 11] })
+  });
+
+  map.on('click',     onMapClick);
+  map.on('mousemove', onMapMouseMove);
+  map.on('contextmenu', onMapRightClick);
+  map.doubleClickZoom.disable();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SIDEBAR TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════════════
+function switchSidebarTab(tabName) {
+  document.querySelectorAll('.sb-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sidebar-panel').forEach(p => p.style.display = 'none');
+
+  const btn = document.getElementById(`tab-btn-${tabName}`);
+  const panel = document.getElementById(`panel-${tabName}`);
+  if (btn) btn.classList.add('active');
+  if (panel) panel.style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MATERIAL & DIAMETER SELECTION
+// ═══════════════════════════════════════════════════════════════════
+function switchMaterial(mat) {
+  currentMaterial = mat;
+  document.getElementById('mat-btn-pvc').classList.toggle('active', mat === 'PVC');
+  document.getElementById('mat-btn-hdpe').classList.toggle('active', mat === 'HDPE');
+  document.getElementById('diam-section-label').textContent =
+    mat === 'PVC' ? 'Pilihan Diameter PVC' : 'Pilihan Diameter HDPE (OD)';
+
+  const list = PIPE_CATALOG[mat];
+  selectedDiamIdx = Math.min(selectedDiamIdx, list.length - 1);
+  buildDiameterUI();
+  updateLegend();
+  if (isAutoWeight) {
+    const d = getSelectedDiameter();
+    if (d) {
+      currentLineWeight = d.weight;
+      const slider = document.getElementById('line-weight-slider');
+      if (slider) slider.value = currentLineWeight;
+      const valEl = document.getElementById('line-weight-val');
+      if (valEl) valEl.textContent = currentLineWeight + ' px';
+    }
+  }
+  updateLinePreview();
+}
+
+function buildDiameterUI() {
+  const cont = document.getElementById('pipe-settings');
+  cont.innerHTML = '';
+  const list = PIPE_CATALOG[currentMaterial];
+
+  list.forEach((d, i) => {
+    const el = document.createElement('div');
+    el.className = 'diam-item' + (i === selectedDiamIdx ? ' selected' : '');
+    el.dataset.idx = i;
+    el.innerHTML = `
+      <div class="diam-swatch" style="background:${d.color};"></div>
+      <span class="diam-label">${d.label}</span>
+      <span class="diam-inch">${d.inch}</span>
+      <span class="diam-check">✓</span>
+    `;
+    el.onclick = () => selectDiameter(i);
+    cont.appendChild(el);
+  });
+}
+
+function selectDiameter(idx) {
+  selectedDiamIdx = idx;
+  document.querySelectorAll('.diam-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+  if (isAutoWeight) {
+    const d = getSelectedDiameter();
+    if (d) {
+      currentLineWeight = d.weight;
+      const slider = document.getElementById('line-weight-slider');
+      if (slider) slider.value = currentLineWeight;
+      const valEl = document.getElementById('line-weight-val');
+      if (valEl) valEl.textContent = currentLineWeight + ' px';
+    }
+  }
+  updateLinePreview();
+}
+
+function getSelectedDiameter() {
+  return PIPE_CATALOG[currentMaterial][selectedDiamIdx];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LINE STYLE & THICKNESS CONTROLLER (SOLID, DOT, DASH & WEIGHT)
+// ═══════════════════════════════════════════════════════════════════
+function getDashArrayForStyle(style, weight) {
+  const w = parseFloat(weight) || 6;
+  if (style === 'dot') {
+    // With lineCap: 'round', a dash of 1 produces a round circle of diameter w px
+    return `1, ${Math.round(Math.max(w * 2.2, 10))}`;
+  } else if (style === 'dash') {
+    return `${Math.round(Math.max(w * 2.2, 12))}, ${Math.round(Math.max(w * 2.0, 10))}`;
+  }
+  return undefined; // 'solid'
+}
+
+function setLineStyle(style) {
+  currentLineStyle = style;
+  ['solid', 'dot', 'dash'].forEach(s => {
+    const btn = document.getElementById('btn-style-' + s);
+    if (btn) btn.classList.toggle('active', s === style);
+  });
+  updateLinePreview();
+
+  // If a pipe is currently selected in select mode, update its line style immediately
+  if (selectedPipeObj && currentMode === 'select') {
+    setPipeStyleQuick(selectedPipeObj.id, style);
+  }
+}
+
+function onWeightSliderChange(val) {
+  currentLineWeight = parseInt(val) || 6;
+  isAutoWeight = false;
+  const chk = document.getElementById('chk-auto-weight');
+  if (chk) chk.checked = false;
+  const valEl = document.getElementById('line-weight-val');
+  if (valEl) valEl.textContent = currentLineWeight + ' px';
+  updateLinePreview();
+
+  // If a pipe is currently selected in select mode, update its weight immediately
+  if (selectedPipeObj && currentMode === 'select') {
+    setPipeWeightQuick(selectedPipeObj.id, currentLineWeight);
+  }
+}
+
+function toggleAutoWeight(checked) {
+  isAutoWeight = checked;
+  if (isAutoWeight) {
+    const d = getSelectedDiameter();
+    if (d) {
+      currentLineWeight = d.weight;
+      const slider = document.getElementById('line-weight-slider');
+      if (slider) slider.value = currentLineWeight;
+      const valEl = document.getElementById('line-weight-val');
+      if (valEl) valEl.textContent = currentLineWeight + ' px';
+    }
+  }
+  updateLinePreview();
+}
+
+function updateLinePreview() {
+  const d = getSelectedDiameter();
+  const line = document.getElementById('preview-line-elem');
+  const badge = document.getElementById('style-preview-badge');
+  if (!line || !d) return;
+
+  const w = currentLineWeight;
+  const style = currentLineStyle;
+  const color = d.color;
+
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width', w);
+
+  if (style === 'dot') {
+    line.setAttribute('stroke-dasharray', `1, ${Math.round(Math.max(w * 2.2, 10))}`);
+    if (badge) badge.textContent = `Dot • ${w}px`;
+  } else if (style === 'dash') {
+    line.setAttribute('stroke-dasharray', `${Math.round(Math.max(w * 2.2, 12))}, ${Math.round(Math.max(w * 2.0, 10))}`);
+    if (badge) badge.textContent = `Putus • ${w}px`;
+  } else {
+    line.removeAttribute('stroke-dasharray');
+    if (badge) badge.textContent = `Solid • ${w}px`;
+  }
+}
+
+function setPipeStyleQuick(id, style) {
+  const pobj = pipes.find(p => p.id === id);
+  if (!pobj) return;
+  pobj.props.lineStyle = style;
+  const w = pobj.props.weight || (getSelectedDiameterByProps(pobj.props)?.weight || 6);
+  const dash = getDashArrayForStyle(style, w);
+  pobj.props.dashArray = dash;
+  pobj.polyline.setStyle({
+    dashArray: dash,
+    lineCap: 'round',
+    lineJoin: 'round'
+  });
+  pobj.polyline.setTooltipContent(makePipeTooltip(pobj.props));
+  showProperties('pipe', pobj.props);
+}
+
+function setPipeWeightQuick(id, weight) {
+  const pobj = pipes.find(p => p.id === id);
+  if (!pobj) return;
+  const w = parseInt(weight) || 6;
+  pobj.props.weight = w;
+  const style = pobj.props.lineStyle || 'solid';
+  const dash = getDashArrayForStyle(style, w);
+  pobj.props.dashArray = dash;
+  pobj.polyline.setStyle({
+    weight: w,
+    dashArray: dash,
+    lineCap: 'round',
+    lineJoin: 'round'
+  });
+  const valEl = document.getElementById('prop-quick-weight-val');
+  if (valEl) valEl.textContent = w + 'px';
+  const dispRow = document.getElementById('prop-disp-weight');
+  if (dispRow) dispRow.textContent = w + ' px';
+  pobj.polyline.setTooltipContent(makePipeTooltip(pobj.props));
+}
+
+function onModalDiamChange() {
+  const mat = document.getElementById('pm-material').value;
+  const diamIdx = parseInt(document.getElementById('pm-diam').value) || 0;
+  const catalog = PIPE_CATALOG[mat] || PIPE_CATALOG.PVC;
+  const d = catalog[diamIdx] || catalog[0];
+  document.getElementById('pm-line-weight').value = d.weight;
+  document.getElementById('pm-weight-val').textContent = d.weight + ' px';
+  updateModalLinePreview();
+}
+
+function updateModalLinePreview() {
+  const mat = document.getElementById('pm-material').value;
+  const diamIdx = parseInt(document.getElementById('pm-diam').value) || 0;
+  const catalog = PIPE_CATALOG[mat] || PIPE_CATALOG.PVC;
+  const d = catalog[diamIdx] || catalog[0];
+  const style = document.getElementById('pm-line-style').value;
+  const w = parseInt(document.getElementById('pm-line-weight').value) || 6;
+  const line = document.getElementById('pm-preview-line');
+  if (!line) return;
+
+  line.setAttribute('stroke', d.color);
+  line.setAttribute('stroke-width', w);
+
+  if (style === 'dot') {
+    line.setAttribute('stroke-dasharray', `1, ${Math.round(Math.max(w * 2.2, 10))}`);
+  } else if (style === 'dash') {
+    line.setAttribute('stroke-dasharray', `${Math.round(Math.max(w * 2.2, 12))}, ${Math.round(Math.max(w * 2.0, 10))}`);
+  } else {
+    line.removeAttribute('stroke-dasharray');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ACCESSORY UI
+// ═══════════════════════════════════════════════════════════════════
+function buildAccessoryUI() {
+  const cont = document.getElementById('acc-buttons');
+  cont.innerHTML = '';
+
+  ACCESSORIES.forEach((a, i) => {
+    const el = document.createElement('div');
+    el.className = 'acc-btn' + (a.id === selectedAcc.id ? ' active' : '');
+    el.innerHTML = `
+      <div class="acc-icon-circle" style="background:${a.color};">
+        ${a.svg}
+      </div>
+      <span class="acc-title">${a.label}</span>
+      <span class="acc-subtitle">${a.subtitle}</span>
+    `;
+    el.onclick = () => selectAccessory(i);
+    cont.appendChild(el);
+  });
+  updateLegend();
+}
+
+function selectAccessory(idx) {
+  selectedAcc = ACCESSORIES[idx];
+  document.querySelectorAll('.acc-btn').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+}
+
+function createAccIcon(acc) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width: 30px; height: 30px; border-radius: 50%;
+      background: ${acc.color};
+      border: 2.2px solid #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.6);
+      cursor: pointer;
+    ">
+      ${acc.svg}
+    </div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -18]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MODE MANAGEMENT & AUTO-TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════════
+function setMode(mode) {
+  if (currentMode === 'pipe' && mode !== 'pipe') cancelDrawing();
+  if (currentMode === 'measure' && mode !== 'measure') cancelMeasure();
+  if (mode !== 'select') clearVertexHandles();
+
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+
+  const modeLabels = {
+    select: 'Pilih / Edit',
+    pipe: 'Gambar Pipa',
+    accessory: 'Pasang Aksesori',
+    delete: 'Mode Hapus',
+    measure: 'Ukur Jarak'
+  };
+  document.getElementById('st-mode').textContent = modeLabels[mode] || mode;
+
+  if (mode === 'pipe') {
+    switchSidebarTab('pipe');
+  } else if (mode === 'accessory') {
+    switchSidebarTab('acc');
+  } else if (mode === 'select') {
+    switchSidebarTab('prop');
+  }
+
+  const mc = document.getElementById('map');
+  mc.classList.toggle('draw-cursor', mode === 'pipe' || mode === 'accessory' || mode === 'measure');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SNAPPING SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+function findSnapPoint(latlng, maxPixelDist = 18) {
+  const mousePt = map.latLngToContainerPoint(latlng);
+  let bestDist = maxPixelDist;
+  let bestLatLng = null;
+
+  pipes.forEach(p => {
+    p.points.forEach(pt => {
+      const screenPt = map.latLngToContainerPoint(pt);
+      const d = mousePt.distanceTo(screenPt);
+      if (d < bestDist) {
+        bestDist = d;
+        bestLatLng = pt;
+      }
+    });
+  });
+
+  accessories.forEach(a => {
+    const pt = a.marker.getLatLng();
+    const screenPt = map.latLngToContainerPoint(pt);
+    const d = mousePt.distanceTo(screenPt);
+    if (d < bestDist) {
+      bestDist = d;
+      bestLatLng = pt;
+    }
+  });
+
+  return bestLatLng;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MAP EVENTS
+// ═══════════════════════════════════════════════════════════════════
+function onMapClick(e) {
+  const snap = findSnapPoint(e.latlng);
+  const targetLatLng = snap || e.latlng;
+
+  if (currentMode === 'pipe') {
+    handlePipeClick(targetLatLng);
+  } else if (currentMode === 'accessory') {
+    placeAccessory(targetLatLng);
+  } else if (currentMode === 'measure') {
+    handleMeasureClick(targetLatLng);
+  } else if (currentMode === 'select') {
+    clearVertexHandles();
+    showEmptyProperties();
+  }
+}
+
+function onMapMouseMove(e) {
+  const { lat, lng } = e.latlng;
+  document.getElementById('st-coord').textContent =
+    `Lat: ${lat.toFixed(6)} | Lng: ${lng.toFixed(6)}`;
+
+  const snap = findSnapPoint(e.latlng);
+  if (snap && (currentMode === 'pipe' || currentMode === 'accessory')) {
+    snapGuideMarker.setLatLng(snap);
+    if (!map.hasLayer(snapGuideMarker)) snapGuideMarker.addTo(map);
+  } else {
+    if (map.hasLayer(snapGuideMarker)) map.removeLayer(snapGuideMarker);
+  }
+
+  const effectiveLatLng = snap || e.latlng;
+
+  if (currentMode === 'pipe' && drawingPipe && pipePoints.length > 0) {
+    const pts = [...pipePoints, effectiveLatLng];
+    const diam = getSelectedDiameter();
+
+    if (tempLine) map.removeLayer(tempLine);
+    const weight = isAutoWeight ? diam.weight : currentLineWeight;
+    const style = currentLineStyle;
+    const dash = getDashArrayForStyle(style, weight);
+    tempLine = L.polyline(pts, {
+      color: diam.color,
+      weight: weight,
+      dashArray: dash,
+      lineCap: 'round',
+      lineJoin: 'round',
+      opacity: 0.85
+    }).addTo(map);
+
+    const totalLen = calcPolylineLength(pts);
+    document.getElementById('dt-length').textContent = totalLen.toFixed(1);
+    document.getElementById('dt-nodes').textContent = pts.length;
+  }
+
+  if (currentMode === 'measure' && measurePoints.length > 0) {
+    const pts = [...measurePoints, e.latlng];
+    if (measureLine) map.removeLayer(measureLine);
+    measureLine = L.polyline(pts, { color: '#FACC15', weight: 3, dashArray: '6,6' }).addTo(map);
+  }
+}
+
+function onMapRightClick(e) {
+  L.DomEvent.preventDefault(e);
+  if (currentMode === 'pipe' && drawingPipe) {
+    finishPipe();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PIPE DRAWING & CALLOUT LABELS
+// ═══════════════════════════════════════════════════════════════════
+function handlePipeClick(latlng) {
+  if (!drawingPipe) {
+    drawingPipe = true;
+    pipePoints = [latlng];
+    document.getElementById('drawing-toolbar').style.display = 'flex';
+    document.getElementById('dt-mat').textContent = currentMaterial;
+    document.getElementById('dt-nodes').textContent = '1';
+    document.getElementById('dt-length').textContent = '0.0';
+  } else {
+    pipePoints.push(latlng);
+    document.getElementById('dt-nodes').textContent = pipePoints.length;
+    document.getElementById('dt-length').textContent = calcPolylineLength(pipePoints).toFixed(1);
+  }
+}
+
+function undoLastPoint() {
+  if (!drawingPipe || pipePoints.length === 0) return;
+  pipePoints.pop();
+  if (pipePoints.length === 0) {
+    cancelDrawing();
+    return;
+  }
+  document.getElementById('dt-nodes').textContent = pipePoints.length;
+  document.getElementById('dt-length').textContent = calcPolylineLength(pipePoints).toFixed(1);
+}
+
+function finishPipe() {
+  if (pipePoints.length < 2) {
+    cancelDrawing();
+    return;
+  }
+  if (tempLine) { map.removeLayer(tempLine); tempLine = null; }
+
+  const id = 'pipe_' + (nextId++);
+  const diam = getSelectedDiameter();
+  const len = calcPolylineLength(pipePoints);
+  const weight = isAutoWeight ? diam.weight : currentLineWeight;
+  const style = currentLineStyle;
+  const dash = getDashArrayForStyle(style, weight);
+
+  const props = {
+    id,
+    name: 'Pipa-' + id.split('_')[1],
+    material: currentMaterial,
+    diameter: diam.mm,
+    inch: diam.inch,
+    diamIdx: selectedDiamIdx,
+    color: diam.color,
+    lineStyle: style,
+    weight: weight,
+    dashArray: dash,
+    pressure: '4',
+    year: new Date().getFullYear(),
+    notes: '',
+    length: len
+  };
+
+  const poly = createPipePolyline(pipePoints, props);
+  poly.addTo(map);
+
+  pipes.push({ id, polyline: poly, props, points: [...pipePoints] });
+
+  cancelDrawing();
+  updateStats();
+  updatePipeCallouts();
+  showProperties('pipe', props);
+  switchSidebarTab('prop');
+}
+
+function createPipePolyline(pts, props) {
+  const weight = props.weight !== undefined ? props.weight : (getSelectedDiameterByProps(props)?.weight || 6);
+  const style = props.lineStyle || 'solid';
+  const dashArray = props.dashArray !== undefined ? props.dashArray : getDashArrayForStyle(style, weight);
+
+  const poly = L.polyline(pts, {
+    color: props.color,
+    weight: weight,
+    opacity: 0.95,
+    dashArray: dashArray,
+    lineCap: 'round',
+    lineJoin: 'round'
+  });
+
+  poly.bindTooltip(makePipeTooltip(props), {
+    sticky: true, direction: 'top', className: 'custom-tooltip'
+  });
+
+  poly.on('click', (ev) => {
+    L.DomEvent.stopPropagation(ev);
+    onPipeClick(props.id);
+  });
+
+  return poly;
+}
+
+function cancelDrawing() {
+  drawingPipe = false;
+  pipePoints = [];
+  if (tempLine) { map.removeLayer(tempLine); tempLine = null; }
+  document.getElementById('drawing-toolbar').style.display = 'none';
+  if (map.hasLayer(snapGuideMarker)) map.removeLayer(snapGuideMarker);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ENGINEERING CALLOUT NOTATIONS & LEADER ARROWS
+// ═══════════════════════════════════════════════════════════════════
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getPipeLabelText(props) {
+  if (props.customLabel && props.customLabel.trim()) {
+    return props.customLabel.trim();
+  }
+  return `Renc. Pipa ${props.material} Ø ${props.inch} - ${props.length.toFixed(0)} m'`;
+}
+
+function updatePipeCallouts() {
+  pipeLabelMarkers.forEach(m => map.removeLayer(m));
+  pipeLabelMarkers = [];
+  pipeLeaderLines.forEach(l => map.removeLayer(l));
+  pipeLeaderLines = [];
+
+  if (!showPipeLabels) return;
+
+  pipes.forEach(p => {
+    const anchor = getMidpoint(p.points);
+    const labelText = getPipeLabelText(p.props);
+    const hasOffset = Boolean(p.props.labelPos);
+    const calloutLatLng = hasOffset ? L.latLng(p.props.labelPos) : anchor;
+
+    // If dragged away from pipe, draw leader line connecting callout to pipe
+    if (hasOffset) {
+      const leader = L.polyline([calloutLatLng, anchor], {
+        color: '#0f172a',
+        weight: 1.8,
+        dashArray: '3, 3',
+        opacity: 0.85
+      }).addTo(map);
+      pipeLeaderLines.push(leader);
+
+      // Target pointer dot on the pipe centerline
+      const arrowIcon = L.divIcon({
+        className: 'pipe-leader-arrow-head',
+        html: `<div style="width:10px;height:10px;border-radius:50%;background:#0f172a;border:2px solid #ffffff;box-shadow:0 0 4px rgba(0,0,0,0.5);" title="Titik target pada pipa"></div>`,
+        iconSize: [10, 10],
+        iconAnchor: [5, 5]
+      });
+      const arrowMarker = L.marker(anchor, { icon: arrowIcon, interactive: false }).addTo(map);
+      pipeLeaderLines.push(arrowMarker);
+    }
+
+    // Callout box with arrow
+    const icon = L.divIcon({
+      className: 'pipe-callout-marker',
+      html: `
+        <div class="pipe-callout-container ${hasOffset ? 'offset-mode' : ''}">
+          <div class="pipe-callout-box" title="Klik ✏️ atau klik 2x untuk edit teks. Geser (drag) untuk memindahkan notasi.">
+            <span class="pipetag" style="background:${p.props.color};"></span>
+            <span class="pipe-callout-text">${escapeHtml(labelText)}</span>
+            <span class="pipe-callout-btn-edit" onclick="event.stopPropagation(); openCalloutModal('${p.id}')" title="Edit Keterangan Notasi">✏️</span>
+          </div>
+          ${!hasOffset ? `
+          <svg class="pipe-callout-arrow-svg" viewBox="0 0 20 18" width="20" height="18">
+            <line x1="10" y1="0" x2="10" y2="10" stroke="#0f172a" stroke-width="2"/>
+            <polygon points="10,18 4,8 16,8" fill="#0f172a" stroke="#0f172a" stroke-width="0.5"/>
+          </svg>` : ''}
+        </div>`,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0]
+    });
+
+    const m = L.marker(calloutLatLng, {
+      icon,
+      draggable: true,
+      zIndexOffset: 600
+    }).addTo(map);
+
+    m.on('dragend', (e) => {
+      const newPos = e.target.getLatLng();
+      p.props.labelPos = [newPos.lat, newPos.lng];
+      updatePipeCallouts();
+      if (selectedPipeObj && selectedPipeObj.id === p.id) {
+        showProperties('pipe', p.props);
+      }
+    });
+
+    m.on('dblclick', (e) => {
+      L.DomEvent.stopPropagation(e);
+      openCalloutModal(p.id);
+    });
+
+    m.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      onPipeClick(p.id);
+    });
+
+    pipeLabelMarkers.push(m);
+  });
+}
+
+function togglePipeLabels() {
+  showPipeLabels = !showPipeLabels;
+  updatePipeCallouts();
+  const btn = document.getElementById('btn-toggle-labels');
+  if (btn) btn.innerHTML = `🏷️ Label: ${showPipeLabels ? 'ON' : 'OFF'}`;
+}
+
+// ─── Modal Callout Controller ─────────────────────────────────────
+function openCalloutModal(pipeId) {
+  const pobj = pipes.find(p => p.id === pipeId);
+  if (!pobj) return;
+  editingCalloutPipeId = pipeId;
+  map.closePopup();
+
+  const currentText = getPipeLabelText(pobj.props);
+  document.getElementById('cm-text').value = currentText;
+  document.getElementById('callout-modal').classList.add('open');
+}
+
+function closeCalloutModal() {
+  document.getElementById('callout-modal').classList.remove('open');
+  editingCalloutPipeId = null;
+}
+
+function saveCalloutModal() {
+  const pobj = pipes.find(p => p.id === editingCalloutPipeId);
+  if (!pobj) return;
+
+  const val = document.getElementById('cm-text').value.trim();
+  pobj.props.customLabel = val;
+
+  updatePipeCallouts();
+  if (selectedPipeObj && selectedPipeObj.id === pobj.id) {
+    showProperties('pipe', pobj.props);
+  }
+  closeCalloutModal();
+}
+
+function resetCalloutToAuto() {
+  const pobj = pipes.find(p => p.id === editingCalloutPipeId);
+  if (!pobj) return;
+  const autoText = `Renc. Pipa ${pobj.props.material} Ø ${pobj.props.inch} - ${pobj.props.length.toFixed(0)} m'`;
+  document.getElementById('cm-text').value = autoText;
+}
+
+function resetCalloutPosition() {
+  const pobj = pipes.find(p => p.id === editingCalloutPipeId);
+  if (!pobj) return;
+  delete pobj.props.labelPos;
+  updatePipeCallouts();
+  if (selectedPipeObj && selectedPipeObj.id === pobj.id) {
+    showProperties('pipe', pobj.props);
+  }
+}
+
+function resetPipeCalloutQuick(pipeId) {
+  const pobj = pipes.find(p => p.id === pipeId);
+  if (!pobj) return;
+  delete pobj.props.customLabel;
+  updatePipeCallouts();
+  showProperties('pipe', pobj.props);
+}
+
+function resetPipeCalloutPosQuick(pipeId) {
+  const pobj = pipes.find(p => p.id === pipeId);
+  if (!pobj) return;
+  delete pobj.props.labelPos;
+  updatePipeCallouts();
+  showProperties('pipe', pobj.props);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ACCESSORY PLACEMENT
+// ═══════════════════════════════════════════════════════════════════
+function placeAccessory(latlng) {
+  const id = 'acc_' + (nextId++);
+  const acc = selectedAcc;
+  const props = {
+    id,
+    type: acc.id,
+    typeLabel: acc.label,
+    name: acc.label + '-' + id.split('_')[1],
+    size: '100',
+    status: 'Aktif',
+    year: new Date().getFullYear(),
+    notes: ''
+  };
+
+  const icon = createAccIcon(acc);
+  const marker = L.marker(latlng, { icon, draggable: true }).addTo(map);
+
+  marker.bindTooltip(`[${acc.label}] ${props.name}`, {
+    direction: 'top', className: 'custom-tooltip'
+  });
+
+  marker.on('click', (ev) => {
+    L.DomEvent.stopPropagation(ev);
+    onAccClick(id);
+  });
+  marker.on('dragend', () => updateStats());
+
+  accessories.push({ id, marker, props });
+  updateStats();
+  showProperties('acc', props);
+  switchSidebarTab('prop');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CLICK & SELECT HANDLERS
+// ═══════════════════════════════════════════════════════════════════
+function onPipeClick(id) {
+  if (currentMode === 'delete') {
+    deletePipe(id);
+    return;
+  }
+  const pobj = pipes.find(p => p.id === id);
+  if (!pobj) return;
+
+  selectedPipeObj = pobj;
+  showProperties('pipe', pobj.props);
+  showVertexHandles(pobj);
+  switchSidebarTab('prop');
+
+  const mid = getMidpoint(pobj.points);
+  L.popup()
+    .setLatLng(mid)
+    .setContent(makePipePopup(pobj.props))
+    .openOn(map);
+}
+
+function onAccClick(id) {
+  if (currentMode === 'delete') {
+    deleteAcc(id);
+    return;
+  }
+  clearVertexHandles();
+  const aobj = accessories.find(a => a.id === id);
+  if (!aobj) return;
+
+  showProperties('acc', aobj.props);
+  switchSidebarTab('prop');
+
+  L.popup()
+    .setLatLng(aobj.marker.getLatLng())
+    .setContent(makeAccPopup(aobj.props))
+    .openOn(map);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  VERTEX EDITING (Drag Pipe Points)
+// ═══════════════════════════════════════════════════════════════════
+function showVertexHandles(pobj) {
+  clearVertexHandles();
+  pobj.points.forEach((pt, idx) => {
+    const handle = L.marker(pt, {
+      draggable: true,
+      icon: L.divIcon({ className: 'vertex-handle', iconSize: [12, 12], iconAnchor: [6, 6] })
+    }).addTo(map);
+
+    handle.on('drag', (e) => {
+      pobj.points[idx] = e.latlng;
+      pobj.polyline.setLatLngs(pobj.points);
+      pobj.props.length = calcPolylineLength(pobj.points);
+      pobj.polyline.setTooltipContent(makePipeTooltip(pobj.props));
+      showProperties('pipe', pobj.props);
+      updatePipeCallouts();
+      updateStats();
+    });
+
+    handle.on('contextmenu', (e) => {
+      L.DomEvent.stopPropagation(e);
+      if (pobj.points.length > 2) {
+        pobj.points.splice(idx, 1);
+        pobj.polyline.setLatLngs(pobj.points);
+        pobj.props.length = calcPolylineLength(pobj.points);
+        showVertexHandles(pobj);
+        showProperties('pipe', pobj.props);
+        updatePipeCallouts();
+        updateStats();
+      }
+    });
+
+    vertexMarkers.push(handle);
+  });
+}
+
+function clearVertexHandles() {
+  vertexMarkers.forEach(m => map.removeLayer(m));
+  vertexMarkers = [];
+  selectedPipeObj = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  POPUPS & TOOLTIPS
+// ═══════════════════════════════════════════════════════════════════
+function makePipeTooltip(p) {
+  const styleText = p.lineStyle === 'dot' ? ' • Dot' : (p.lineStyle === 'dash' ? ' • Putus' : '');
+  return `[${p.material}${styleText}] ${p.name} | ⌀ ${p.inch} (${p.diameter} mm) | ${p.length.toFixed(1)} m`;
+}
+
+function makePipePopup(p) {
+  const styleLabel = p.lineStyle === 'dot' ? '•• Dot (Titik)' : (p.lineStyle === 'dash' ? '-- Putus (Dash)' : '── Solid');
+  const weightVal = p.weight || (getSelectedDiameterByProps(p)?.weight || 6);
+  return `
+    <div class="popup-title">💧 ${p.name}</div>
+    <div class="popup-row"><span class="popup-key">Material:</span><span class="popup-val" style="color:${p.material==='HDPE'?'#facc15':'#38bdf8'}">${p.material}</span></div>
+    <div class="popup-row"><span class="popup-key">Diameter:</span><span class="popup-val" style="color:${p.color}">${p.inch} (${p.diameter} mm)</span></div>
+    <div class="popup-row"><span class="popup-key">Gaya Garis:</span><span class="popup-val">${styleLabel} (${weightVal}px)</span></div>
+    <div class="popup-row"><span class="popup-key">Panjang:</span><span class="popup-val">${p.length.toFixed(1)} m</span></div>
+    <div class="popup-row"><span class="popup-key">Tekanan:</span><span class="popup-val">${p.pressure || '-'} bar</span></div>
+    <div class="popup-row"><span class="popup-key">Tahun Pasang:</span><span class="popup-val">${p.year}</span></div>
+    ${p.notes ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;">${p.notes}</div>` : ''}
+    <div class="popup-actions">
+      <button class="popup-btn edit-btn" onclick="openPipeModal('${p.id}')">✏️ Edit</button>
+      <button class="popup-btn del-btn" onclick="deletePipe('${p.id}');map.closePopup();">🗑 Hapus</button>
+    </div>`;
+}
+
+function makeAccPopup(p) {
+  const acc = ACCESSORIES.find(a => a.id === p.type) || ACCESSORIES[0];
+  return `
+    <div class="popup-title">${acc.label} (${p.name})</div>
+    <div class="popup-row"><span class="popup-key">Tipe:</span><span class="popup-val">${p.typeLabel}</span></div>
+    <div class="popup-row"><span class="popup-key">Ukuran:</span><span class="popup-val">${p.size ? p.size + ' mm' : '-'}</span></div>
+    <div class="popup-row"><span class="popup-key">Status:</span><span class="popup-val">${p.status}</span></div>
+    <div class="popup-row"><span class="popup-key">Tahun Pasang:</span><span class="popup-val">${p.year}</span></div>
+    ${p.notes ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;">${p.notes}</div>` : ''}
+    <div class="popup-actions">
+      <button class="popup-btn edit-btn" onclick="openAccModal('${p.id}')">✏️ Edit</button>
+      <button class="popup-btn del-btn" onclick="deleteAcc('${p.id}');map.closePopup();">🗑 Hapus</button>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PROPERTIES PANEL
+// ═══════════════════════════════════════════════════════════════════
+function showEmptyProperties() {
+  document.getElementById('prop-content').innerHTML = `
+    <div class="prop-card" style="text-align:center;padding:24px 14px;">
+      <div style="font-size:28px;margin-bottom:8px;">🔍</div>
+      <div style="font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">Belum Ada Elemen Dipilih</div>
+      <p style="font-size:11px;color:#94a3b8;line-height:1.5;">
+        Klik pada salah satu garis pipa atau simbol aksesori di peta untuk memeriksa detail spesifikasi, panjang, tekanan, dan mengedit propertinya.
+      </p>
+    </div>`;
+}
+
+function showProperties(type, props) {
+  const cont = document.getElementById('prop-content');
+  if (type === 'pipe') {
+    const styleLabel = props.lineStyle === 'dot' ? '•• Dot (Titik)' : (props.lineStyle === 'dash' ? '-- Putus (Dash)' : '── Solid');
+    const weightVal = props.weight || (getSelectedDiameterByProps(props)?.weight || 6);
+    cont.innerHTML = `
+      <div class="prop-card">
+        <h4>
+          <span>💧 Detail Pipa</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:${props.material==='HDPE'?'#ca8a04':'#0284c7'};color:#fff;">${props.material}</span>
+        </h4>
+        <div class="prop-row"><span class="prop-key">ID Pipa:</span><span class="prop-val">${props.id}</span></div>
+        <div class="prop-row"><span class="prop-key">Nama:</span><span class="prop-val">${props.name}</span></div>
+        <div class="prop-row"><span class="prop-key">Material:</span><span class="prop-val" style="color:${props.material==='HDPE'?'#facc15':'#38bdf8'}">${props.material}</span></div>
+        <div class="prop-row"><span class="prop-key">Diameter:</span><span class="prop-val" style="color:${props.color}">${props.inch} (${props.diameter} mm)</span></div>
+        <div class="prop-row"><span class="prop-key">Gaya Garis:</span><span class="prop-val">${styleLabel}</span></div>
+        <div class="prop-row"><span class="prop-key">Tebal Garis:</span><span class="prop-val" id="prop-disp-weight">${weightVal} px</span></div>
+        <div class="prop-row"><span class="prop-key">Panjang Segmen:</span><span class="prop-val">${props.length.toFixed(1)} meter</span></div>
+        <div class="prop-row"><span class="prop-key">Tekanan Desain:</span><span class="prop-val">${props.pressure || '-'} bar</span></div>
+        <div class="prop-row"><span class="prop-key">Tahun Pasang:</span><span class="prop-val">${props.year}</span></div>
+        ${props.notes ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;"><em>Catatan:</em> ${props.notes}</div>` : ''}
+
+        <!-- Quick Style & Thickness Switcher for this pipe -->
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #334155;">
+          <div style="font-size:10.5px;font-weight:700;color:#94a3b8;margin-bottom:5px;">Ubah Gaya Garis Pipa Ini:</div>
+          <div style="display:flex;gap:4px;margin-bottom:8px;">
+            <button class="prop-quick-btn ${(props.lineStyle||'solid')==='solid'?'active':''}" onclick="setPipeStyleQuick('${props.id}', 'solid')">── Solid</button>
+            <button class="prop-quick-btn ${props.lineStyle==='dot'?'active':''}" onclick="setPipeStyleQuick('${props.id}', 'dot')">•• Dot</button>
+            <button class="prop-quick-btn ${props.lineStyle==='dash'?'active':''}" onclick="setPipeStyleQuick('${props.id}', 'dash')">-- Dash</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:10.5px;color:#94a3b8;">Tebal:</span>
+            <input type="range" min="2" max="22" value="${weightVal}" style="flex:1;accent-color:#38bdf8;" oninput="setPipeWeightQuick('${props.id}', this.value)" />
+            <span style="font-size:11px;font-weight:bold;color:#38bdf8;width:34px;" id="prop-quick-weight-val">${weightVal}px</span>
+          </div>
+        </div>
+
+        <!-- Notasi Keterangan di Peta (Callout & Panah) -->
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #334155;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <span style="font-size:10.5px;font-weight:700;color:#94a3b8;">🏷️ Notasi Teks di Peta:</span>
+            <span style="font-size:9.5px;color:${props.customLabel ? '#38bdf8' : '#94a3b8'};font-weight:bold;">${props.customLabel ? 'Kustom' : 'Otomatis'}</span>
+          </div>
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:6px 8px;font-size:11px;color:#f8fafc;font-weight:700;margin-bottom:6px;word-break:break-word;">
+            ${escapeHtml(getPipeLabelText(props))}
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="prop-quick-btn" onclick="openCalloutModal('${props.id}')" title="Edit teks deskripsi notasi">✏️ Edit Notasi</button>
+            <button class="prop-quick-btn" onclick="resetPipeCalloutQuick('${props.id}')" title="Kembalikan teks ke format standar otomatis">↺ Teks Auto</button>
+            ${props.labelPos ? `<button class="prop-quick-btn" onclick="resetPipeCalloutPosQuick('${props.id}')" title="Kembalikan posisi panah ke atas garis pipa">🎯 Reset Panah</button>` : ''}
+          </div>
+        </div>
+
+        <div class="prop-actions-box">
+          <button class="prop-act-btn edit" onclick="openPipeModal('${props.id}')">✏️ Edit Lengkap</button>
+          <button class="prop-act-btn del" onclick="deletePipe('${props.id}')">🗑 Hapus</button>
+        </div>
+      </div>
+      <div class="help-hint" style="margin-top:12px;">
+        💡 <strong>Ubah Rute:</strong> Geser titik-titik bulat putih pada peta untuk mengubah lekukan pipa ini.
+      </div>`;
+  } else {
+    const acc = ACCESSORIES.find(a => a.id === props.type) || ACCESSORIES[0];
+    cont.innerHTML = `
+      <div class="prop-card">
+        <h4>
+          <span>${acc.label}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:#334155;color:#f8fafc;">${props.status}</span>
+        </h4>
+        <div class="prop-row"><span class="prop-key">ID Aksesori:</span><span class="prop-val">${props.id}</span></div>
+        <div class="prop-row"><span class="prop-key">Nama:</span><span class="prop-val">${props.name}</span></div>
+        <div class="prop-row"><span class="prop-key">Tipe:</span><span class="prop-val">${props.typeLabel}</span></div>
+        <div class="prop-row"><span class="prop-key">Ukuran:</span><span class="prop-val">${props.size ? props.size + ' mm' : '-'}</span></div>
+        <div class="prop-row"><span class="prop-key">Status Operasional:</span><span class="prop-val">${props.status}</span></div>
+        <div class="prop-row"><span class="prop-key">Tahun Pasang:</span><span class="prop-val">${props.year}</span></div>
+        ${props.notes ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;"><em>Catatan:</em> ${props.notes}</div>` : ''}
+        <div class="prop-actions-box">
+          <button class="prop-act-btn edit" onclick="openAccModal('${props.id}')">✏️ Edit Aksesori</button>
+          <button class="prop-act-btn del" onclick="deleteAcc('${props.id}')">🗑 Hapus</button>
+        </div>
+      </div>
+      <div class="help-hint" style="margin-top:12px;">
+        💡 <strong>Pindah Posisi:</strong> Anda dapat langsung menyeret (drag) marker aksesori ini pada peta.
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  EDIT MODALS (PIPE & ACCESSORY)
+// ═══════════════════════════════════════════════════════════════════
+function openPipeModal(id) {
+  const pobj = pipes.find(p => p.id === id);
+  if (!pobj) return;
+  editingPipeId = id;
+  map.closePopup();
+
+  document.getElementById('pm-name').value     = pobj.props.name;
+  document.getElementById('pm-material').value = pobj.props.material;
+  populateModalDiameters(pobj.props.material, pobj.props.diamIdx);
+
+  const style = pobj.props.lineStyle || 'solid';
+  const weight = pobj.props.weight || (getSelectedDiameterByProps(pobj.props)?.weight || 6);
+
+  document.getElementById('pm-line-style').value  = style;
+  document.getElementById('pm-line-weight').value = weight;
+  document.getElementById('pm-weight-val').textContent = weight + ' px';
+
+  updateModalLinePreview();
+
+  document.getElementById('pm-callout').value  = pobj.props.customLabel || '';
+  document.getElementById('pm-pressure').value = pobj.props.pressure;
+  document.getElementById('pm-year').value     = pobj.props.year;
+  document.getElementById('pm-notes').value    = pobj.props.notes;
+  document.getElementById('pipe-modal').classList.add('open');
+}
+
+function onModalMaterialChange() {
+  const mat = document.getElementById('pm-material').value;
+  populateModalDiameters(mat, 0);
+}
+
+function populateModalDiameters(material, selectedIdx) {
+  const sel = document.getElementById('pm-diam');
+  sel.innerHTML = '';
+  const catalog = PIPE_CATALOG[material] || PIPE_CATALOG.PVC;
+  catalog.forEach((d, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `${d.label} (${d.inch})`;
+    if (idx === selectedIdx) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function closePipeModal() {
+  document.getElementById('pipe-modal').classList.remove('open');
+  editingPipeId = null;
+}
+
+function savePipeModal() {
+  const pobj = pipes.find(p => p.id === editingPipeId);
+  if (!pobj) return;
+
+  const mat = document.getElementById('pm-material').value;
+  const diamIdx = parseInt(document.getElementById('pm-diam').value) || 0;
+  const catalog = PIPE_CATALOG[mat] || PIPE_CATALOG.PVC;
+  const d = catalog[diamIdx] || catalog[0];
+
+  const style = document.getElementById('pm-line-style').value;
+  const weight = parseInt(document.getElementById('pm-line-weight').value) || d.weight || 6;
+  const dash = getDashArrayForStyle(style, weight);
+
+  pobj.props.name      = document.getElementById('pm-name').value;
+  pobj.props.material  = mat;
+  pobj.props.diamIdx   = diamIdx;
+  pobj.props.diameter  = d.mm;
+  pobj.props.inch      = d.inch;
+  pobj.props.color     = d.color;
+  pobj.props.lineStyle = style;
+  pobj.props.weight    = weight;
+  pobj.props.dashArray = dash;
+  pobj.props.customLabel = document.getElementById('pm-callout').value.trim();
+  pobj.props.pressure  = document.getElementById('pm-pressure').value;
+  pobj.props.year      = document.getElementById('pm-year').value;
+  pobj.props.notes     = document.getElementById('pm-notes').value;
+
+  pobj.polyline.setStyle({
+    color: d.color,
+    weight: weight,
+    dashArray: dash,
+    lineCap: 'round',
+    lineJoin: 'round'
+  });
+  pobj.polyline.setTooltipContent(makePipeTooltip(pobj.props));
+  showProperties('pipe', pobj.props);
+  updatePipeCallouts();
+  updateStats();
+  closePipeModal();
+}
+
+function openAccModal(id) {
+  const aobj = accessories.find(a => a.id === id);
+  if (!aobj) return;
+  editingAccId = id;
+  map.closePopup();
+
+  document.getElementById('am-name').value   = aobj.props.name;
+  const selType = document.getElementById('am-type');
+  selType.innerHTML = '';
+  ACCESSORIES.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = `${a.label} (${a.subtitle})`;
+    if (a.id === aobj.props.type) opt.selected = true;
+    selType.appendChild(opt);
+  });
+
+  document.getElementById('am-size').value   = aobj.props.size;
+  document.getElementById('am-status').value = aobj.props.status;
+  document.getElementById('am-year').value   = aobj.props.year;
+  document.getElementById('am-notes').value  = aobj.props.notes;
+  document.getElementById('acc-modal').classList.add('open');
+}
+
+function closeAccModal() {
+  document.getElementById('acc-modal').classList.remove('open');
+  editingAccId = null;
+}
+
+function saveAccModal() {
+  const aobj = accessories.find(a => a.id === editingAccId);
+  if (!aobj) return;
+
+  const typeId = document.getElementById('am-type').value;
+  const acc = ACCESSORIES.find(a => a.id === typeId) || ACCESSORIES[0];
+
+  aobj.props.type      = typeId;
+  aobj.props.typeLabel = acc.label;
+  aobj.props.name      = document.getElementById('am-name').value;
+  aobj.props.size      = document.getElementById('am-size').value;
+  aobj.props.status    = document.getElementById('am-status').value;
+  aobj.props.year      = document.getElementById('am-year').value;
+  aobj.props.notes     = document.getElementById('am-notes').value;
+
+  aobj.marker.setIcon(createAccIcon(acc));
+  aobj.marker.setTooltipContent(`[${acc.label}] ${aobj.props.name}`);
+  showProperties('acc', aobj.props);
+  updateStats();
+  closeAccModal();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DELETE & CLEAR
+// ═══════════════════════════════════════════════════════════════════
+function deletePipe(id) {
+  const idx = pipes.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  map.removeLayer(pipes[idx].polyline);
+  pipes.splice(idx, 1);
+  clearVertexHandles();
+  updatePipeCallouts();
+  updateStats();
+  showEmptyProperties();
+}
+
+function deleteAcc(id) {
+  const idx = accessories.findIndex(a => a.id === id);
+  if (idx === -1) return;
+  map.removeLayer(accessories[idx].marker);
+  accessories.splice(idx, 1);
+  updateStats();
+  showEmptyProperties();
+}
+
+function clearAll() {
+  if (!confirm('Apakah Anda yakin ingin menghapus seluruh jaringan pipa dan aksesori?')) return;
+  pipes.forEach(p => map.removeLayer(p.polyline));
+  accessories.forEach(a => map.removeLayer(a.marker));
+  pipes = []; accessories = [];
+  clearVertexHandles();
+  updatePipeCallouts();
+  updateStats();
+  showEmptyProperties();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MEASURE TOOL
+// ═══════════════════════════════════════════════════════════════════
+function handleMeasureClick(latlng) {
+  measurePoints.push(latlng);
+  const mk = L.circleMarker(latlng, {
+    radius: 5, color: '#FACC15', fillColor: '#FACC15', fillOpacity: 1, weight: 2
+  }).addTo(map);
+  measureMarkers.push(mk);
+
+  if (measurePoints.length > 1) {
+    const total = calcPolylineLength(measurePoints);
+    if (measureLine) {
+      measureLine.setLatLngs(measurePoints);
+    } else {
+      measureLine = L.polyline(measurePoints, { color: '#FACC15', weight: 3, dashArray: '6,6' }).addTo(map);
+    }
+    L.popup()
+      .setLatLng(latlng)
+      .setContent(`📏 Jarak Terukur: <strong>${total.toFixed(1)} m</strong><br><small>Tekan Esc untuk selesai</small>`)
+      .openOn(map);
+  }
+}
+
+function cancelMeasure() {
+  if (measureLine) { map.removeLayer(measureLine); measureLine = null; }
+  measureMarkers.forEach(m => map.removeLayer(m));
+  measureMarkers = []; measurePoints = [];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  REKAPITULASI (BOQ) & EXPORT CSV
+// ═══════════════════════════════════════════════════════════════════
+function openBOQModal() {
+  const cont = document.getElementById('boq-content');
+
+  const pipeSummary = {};
+  let totalLengthAll = 0;
+  let totalSegmentsAll = 0;
+
+  pipes.forEach(p => {
+    const key = `${p.props.material}__${p.props.diameter}__${p.props.inch}`;
+    if (!pipeSummary[key]) {
+      pipeSummary[key] = {
+        material: p.props.material,
+        diameter: p.props.diameter,
+        inch: p.props.inch,
+        color: p.props.color,
+        count: 0,
+        length: 0
+      };
+    }
+    pipeSummary[key].count += 1;
+    pipeSummary[key].length += p.props.length;
+    totalLengthAll += p.props.length;
+    totalSegmentsAll += 1;
+  });
+
+  const accSummary = {};
+  let totalAccAll = 0;
+  accessories.forEach(a => {
+    const key = a.props.type;
+    if (!accSummary[key]) {
+      accSummary[key] = {
+        typeLabel: a.props.typeLabel,
+        color: ACCESSORIES.find(x => x.id === key)?.color || '#38bdf8',
+        count: 0
+      };
+    }
+    accSummary[key].count += 1;
+    totalAccAll += 1;
+  });
+
+  let html = `
+    <h4 style="color:#7dd3fc;margin-bottom:6px;font-size:13px;">1. Rekapitulasi Pipa Jaringan</h4>
+    <table class="boq-table">
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Diameter</th>
+          <th>Segmen</th>
+          <th>Total Panjang</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  const pipeKeys = Object.keys(pipeSummary);
+  if (pipeKeys.length === 0) {
+    html += `<tr><td colspan="4" style="text-align:center;color:#64748b;font-style:italic;">Belum ada pipa yang digambar.</td></tr>`;
+  } else {
+    pipeKeys.forEach(k => {
+      const row = pipeSummary[k];
+      html += `
+        <tr>
+          <td><span style="font-weight:700;color:${row.material==='HDPE'?'#facc15':'#38bdf8'}">${row.material}</span></td>
+          <td><span style="display:inline-block;width:12px;height:4px;background:${row.color};border-radius:2px;margin-right:6px;"></span>${row.inch} (${row.diameter} mm)</td>
+          <td>${row.count} unit</td>
+          <td><strong>${row.length.toFixed(1)} m</strong> (${(row.length/1000).toFixed(3)} km)</td>
+        </tr>`;
+    });
+    html += `
+      <tr class="boq-total-row">
+        <td colspan="2">TOTAL PANJANG PIPA</td>
+        <td>${totalSegmentsAll} segmen</td>
+        <td>${totalLengthAll.toFixed(1)} m (${(totalLengthAll/1000).toFixed(3)} km)</td>
+      </tr>`;
+  }
+  html += `</tbody></table>`;
+
+  html += `
+    <h4 style="color:#7dd3fc;margin:12px 0 6px;font-size:13px;">2. Rekapitulasi Aksesori & Fitting</h4>
+    <table class="boq-table">
+      <thead>
+        <tr>
+          <th>Tipe Aksesori</th>
+          <th>Jumlah Terpasang</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  const accKeys = Object.keys(accSummary);
+  if (accKeys.length === 0) {
+    html += `<tr><td colspan="2" style="text-align:center;color:#64748b;font-style:italic;">Belum ada aksesori yang dipasang.</td></tr>`;
+  } else {
+    accKeys.forEach(k => {
+      const row = accSummary[k];
+      html += `
+        <tr>
+          <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${row.color};margin-right:6px;"></span>${row.typeLabel}</td>
+          <td><strong>${row.count} unit</strong></td>
+        </tr>`;
+    });
+    html += `
+      <tr class="boq-total-row">
+        <td>TOTAL AKSESORI</td>
+        <td>${totalAccAll} unit</td>
+      </tr>`;
+  }
+  html += `</tbody></table>`;
+
+  cont.innerHTML = html;
+  document.getElementById('boq-modal').classList.add('open');
+}
+
+function closeBOQModal() {
+  document.getElementById('boq-modal').classList.remove('open');
+}
+
+function exportBOQtoCSV() {
+  let csv = '\uFEFF';
+  csv += 'REKAPITULASI MATERIAL PIPA & AKSESORI (BOQ)\r\n';
+  csv += `Tanggal: ${new Date().toLocaleDateString('id-ID')}\r\n\r\n`;
+
+  csv += '--- REKAP PIPA ---\r\n';
+  csv += 'Material,Diameter (inch),Diameter (mm),Jumlah Segmen,Total Panjang (meter),Total Panjang (km)\r\n';
+
+  const pipeSummary = {};
+  pipes.forEach(p => {
+    const key = `${p.props.material}__${p.props.diameter}__${p.props.inch}`;
+    if (!pipeSummary[key]) {
+      pipeSummary[key] = { material: p.props.material, diameter: p.props.diameter, inch: p.props.inch, count: 0, length: 0 };
+    }
+    pipeSummary[key].count += 1;
+    pipeSummary[key].length += p.props.length;
+  });
+
+  Object.values(pipeSummary).forEach(r => {
+    csv += `"${r.material}","${r.inch}",${r.diameter},${r.count},${r.length.toFixed(1)},${(r.length/1000).toFixed(3)}\r\n`;
+  });
+
+  csv += '\r\n--- REKAP AKSESORI ---\r\n';
+  csv += 'Tipe Aksesori,Jumlah (Unit)\r\n';
+
+  const accSummary = {};
+  accessories.forEach(a => {
+    const key = a.props.typeLabel;
+    accSummary[key] = (accSummary[key] || 0) + 1;
+  });
+
+  Object.entries(accSummary).forEach(([k, v]) => {
+    csv += `"${k}",${v}\r\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `BOQ-Jaringan-Pipa-${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MODE GAMBAR KERJA & KOP (PRINT LAYOUT CONTROLLER)
+// ═══════════════════════════════════════════════════════════════════
+function toggleLayoutMode() {
+  if (isLayoutMode) {
+    exitLayoutMode();
+  } else {
+    enterLayoutMode();
+  }
+}
+
+function enterLayoutMode() {
+  isLayoutMode = true;
+  document.body.classList.add('in-layout-mode');
+
+  // Move #map-container into the sheet viewport mount
+  const mapMount = document.getElementById('map-mount');
+  const mapContainer = document.getElementById('map-container');
+  mapMount.appendChild(mapContainer);
+  mapContainer.style.display = 'block';
+
+  // Make sure pipe labels are enabled and visible
+  showPipeLabels = true;
+  updatePipeCallouts();
+  buildKopLegend();
+  renderKopView();
+
+  setTimeout(() => {
+    map.invalidateSize();
+    fitNetworkInView();
+  }, 100);
+}
+
+function exitLayoutMode() {
+  isLayoutMode = false;
+  document.body.classList.remove('in-layout-mode');
+
+  // Return #map-container back to #main
+  const main = document.getElementById('main');
+  const mapContainer = document.getElementById('map-container');
+  main.appendChild(mapContainer);
+  mapContainer.style.display = 'block';
+
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 100);
+}
+
+function fitNetworkInView() {
+  const bounds = [];
+  pipes.forEach(p => {
+    p.points.forEach(pt => bounds.push(pt));
+  });
+  accessories.forEach(a => {
+    bounds.push(a.marker.getLatLng());
+  });
+
+  if (bounds.length > 0) {
+    map.fitBounds(L.latLngBounds(bounds), { padding: [60, 60] });
+  } else {
+    map.setView([-6.2088, 106.8456], 14);
+  }
+}
+
+function printDrawingSheet() {
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  KOP GAMBAR DATA & MODAL
+// ═══════════════════════════════════════════════════════════════════
+function loadSavedKopData() {
+  try {
+    const saved = localStorage.getItem('pipemap_kop_data');
+    if (saved) {
+      kopData = { ...DEFAULT_KOP_DATA, ...JSON.parse(saved) };
+    }
+  } catch (e) {}
+  renderKopView();
+}
+
+function renderKopView() {
+  document.getElementById('kop-view-instansi-nama').textContent = kopData.instansi_nama;
+  document.getElementById('kop-view-instansi-alamat').innerHTML = kopData.instansi_alamat.replace(/\n/g, '<br>');
+  document.getElementById('kop-view-kegiatan').textContent = kopData.kegiatan;
+  document.getElementById('kop-view-pekerjaan').textContent = kopData.pekerjaan;
+  
+  document.getElementById('kv-rt').textContent = kopData.rt;
+  document.getElementById('kv-desa').textContent = kopData.desa;
+  document.getElementById('kv-kec').textContent = kopData.kec;
+  document.getElementById('kv-kab').textContent = kopData.kab;
+
+  document.getElementById('kop-view-judul').textContent = kopData.judul;
+
+  document.getElementById('kop-view-pemeriksa-jabatan').innerHTML = kopData.pemeriksa_jabatan.replace(/\n/g, '<br>');
+  document.getElementById('kop-view-pemeriksa-nama').textContent = kopData.pemeriksa_nama;
+  document.getElementById('kop-view-pemeriksa-nip').textContent = kopData.pemeriksa_nip;
+
+  document.getElementById('kop-view-mengetahui-jabatan').innerHTML = kopData.mengetahui_jabatan.replace(/\n/g, '<br>');
+  document.getElementById('kop-view-mengetahui-nama').textContent = kopData.mengetahui_nama;
+  document.getElementById('kop-view-mengetahui-nip').textContent = kopData.mengetahui_nip;
+
+  document.getElementById('kop-view-pengesah-jabatan').innerHTML = kopData.pengesah_jabatan.replace(/\n/g, '<br>');
+  document.getElementById('kop-view-pengesah-nama').textContent = kopData.pengesah_nama;
+
+  document.getElementById('kop-view-tanggal').textContent = kopData.tanggal;
+  document.getElementById('kop-view-skala').textContent = kopData.skala;
+  document.getElementById('kop-view-no-gambar').textContent = kopData.no_gambar;
+  document.getElementById('kop-view-jml-gambar').textContent = kopData.jml_gambar;
+}
+
+function openKopModal() {
+  document.getElementById('km-instansi-nama').value = kopData.instansi_nama;
+  document.getElementById('km-instansi-alamat').value = kopData.instansi_alamat;
+  document.getElementById('km-kegiatan').value = kopData.kegiatan;
+  document.getElementById('km-pekerjaan').value = kopData.pekerjaan;
+  document.getElementById('km-rt').value = kopData.rt;
+  document.getElementById('km-desa').value = kopData.desa;
+  document.getElementById('km-kec').value = kopData.kec;
+  document.getElementById('km-kab').value = kopData.kab;
+  document.getElementById('km-judul').value = kopData.judul;
+
+  document.getElementById('km-pemeriksa-jabatan').value = kopData.pemeriksa_jabatan;
+  document.getElementById('km-pemeriksa-nama').value = kopData.pemeriksa_nama;
+  document.getElementById('km-pemeriksa-nip').value = kopData.pemeriksa_nip;
+
+  document.getElementById('km-mengetahui-jabatan').value = kopData.mengetahui_jabatan;
+  document.getElementById('km-mengetahui-nama').value = kopData.mengetahui_nama;
+  document.getElementById('km-mengetahui-nip').value = kopData.mengetahui_nip;
+
+  document.getElementById('km-pengesah-jabatan').value = kopData.pengesah_jabatan;
+  document.getElementById('km-pengesah-nama').value = kopData.pengesah_nama;
+
+  document.getElementById('km-tanggal').value = kopData.tanggal;
+  document.getElementById('km-skala').value = kopData.skala;
+  document.getElementById('km-no-gambar').value = kopData.no_gambar;
+  document.getElementById('km-jml-gambar').value = kopData.jml_gambar;
+
+  document.getElementById('kop-modal').classList.add('open');
+}
+
+function closeKopModal() {
+  document.getElementById('kop-modal').classList.remove('open');
+}
+
+function saveKopModal() {
+  kopData.instansi_nama = document.getElementById('km-instansi-nama').value;
+  kopData.instansi_alamat = document.getElementById('km-instansi-alamat').value;
+  kopData.kegiatan = document.getElementById('km-kegiatan').value;
+  kopData.pekerjaan = document.getElementById('km-pekerjaan').value;
+  kopData.rt = document.getElementById('km-rt').value;
+  kopData.desa = document.getElementById('km-desa').value;
+  kopData.kec = document.getElementById('km-kec').value;
+  kopData.kab = document.getElementById('km-kab').value;
+  kopData.judul = document.getElementById('km-judul').value;
+
+  kopData.pemeriksa_jabatan = document.getElementById('km-pemeriksa-jabatan').value;
+  kopData.pemeriksa_nama = document.getElementById('km-pemeriksa-nama').value;
+  kopData.pemeriksa_nip = document.getElementById('km-pemeriksa-nip').value;
+
+  kopData.mengetahui_jabatan = document.getElementById('km-mengetahui-jabatan').value;
+  kopData.mengetahui_nama = document.getElementById('km-mengetahui-nama').value;
+  kopData.mengetahui_nip = document.getElementById('km-mengetahui-nip').value;
+
+  kopData.pengesah_jabatan = document.getElementById('km-pengesah-jabatan').value;
+  kopData.pengesah_nama = document.getElementById('km-pengesah-nama').value;
+
+  kopData.tanggal = document.getElementById('km-tanggal').value;
+  kopData.skala = document.getElementById('km-skala').value;
+  kopData.no_gambar = document.getElementById('km-no-gambar').value;
+  kopData.jml_gambar = document.getElementById('km-jml-gambar').value;
+
+  try {
+    localStorage.setItem('pipemap_kop_data', JSON.stringify(kopData));
+  } catch (e) {}
+
+  renderKopView();
+  closeKopModal();
+}
+
+function buildKopLegend() {
+  const cont = document.getElementById('kop-legend-list');
+  cont.innerHTML = '';
+  // Show representative diameters matching the Tirta Rangga drawing
+  const sampleList = [
+    { inch: '1/2"',  mm: 20,  color: '#FF8A80' },
+    { inch: '3/4"',  mm: 25,  color: '#FF5252' },
+    { inch: '1"',    mm: 32,  color: '#FF9E80' },
+    { inch: '1 1/2"',mm: 50,  color: '#FFD740' },
+    { inch: '2"',    mm: 63,  color: '#EEFF41' },
+    { inch: '3"',    mm: 90,  color: '#69F0AE' },
+    { inch: '4"',    mm: 110, color: '#00E676' },
+    { inch: '6"',    mm: 160, color: '#40C4FF' },
+    { inch: '8"',    mm: 200, color: '#7C4DFF' },
+    { inch: '10"',   mm: 250, color: '#EA80FC' },
+    { inch: '12"',   mm: 315, color: '#FF4081' },
+    { inch: '16"',   mm: 400, color: '#00E5FF' }
+  ];
+
+  sampleList.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'kop-leg-item';
+    el.innerHTML = `<span class="kop-leg-dot" style="background:${d.color};"></span> Ø ${d.inch} (${d.mm}mm)`;
+    cont.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LEGEND UI (Editor Mode)
+// ═══════════════════════════════════════════════════════════════════
+function toggleLegend() {
+  const leg = document.getElementById('legend');
+  leg.classList.toggle('collapsed');
+  document.getElementById('leg-toggle-icon').textContent = leg.classList.contains('collapsed') ? '+' : '−';
+}
+
+function updateLegend() {
+  const lp = document.getElementById('legend-pipes');
+  lp.innerHTML = '';
+  document.getElementById('leg-mat-label').textContent = `Pipa ${currentMaterial}:`;
+
+  const list = PIPE_CATALOG[currentMaterial];
+  list.forEach(d => {
+    const item = document.createElement('div');
+    item.className = 'leg-item';
+    item.innerHTML = `<div class="leg-pipe" style="background:${d.color};"></div> ${d.label}`;
+    lp.appendChild(item);
+  });
+
+  const la = document.getElementById('legend-acc');
+  la.innerHTML = '';
+  ACCESSORIES.forEach(a => {
+    const item = document.createElement('div');
+    item.className = 'leg-item';
+    item.innerHTML = `
+      <div class="leg-acc-icon" style="background:${a.color};">
+        ${a.svg.replace('width="18" height="18"', 'width="12" height="12"')}
+      </div>
+      ${a.label}
+    `;
+    la.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  STATS & HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('st-pipes').textContent = pipes.length;
+  document.getElementById('st-acc').textContent   = accessories.length;
+
+  let pvcLen = 0;
+  let hdpeLen = 0;
+  pipes.forEach(p => {
+    if (p.props.material === 'HDPE') hdpeLen += p.props.length;
+    else pvcLen += p.props.length;
+  });
+
+  document.getElementById('st-pvc-len').textContent = pvcLen.toFixed(0);
+  document.getElementById('st-hdpe-len').textContent = hdpeLen.toFixed(0);
+}
+
+function calcPolylineLength(pts) {
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    total += L.latLng(pts[i - 1]).distanceTo(L.latLng(pts[i]));
+  }
+  return total;
+}
+
+function getMidpoint(pts) {
+  if (!pts || pts.length === 0) return [0, 0];
+  const mid = Math.floor(pts.length / 2);
+  return pts[mid];
+}
+
+function getSelectedDiameterByProps(p) {
+  const cat = PIPE_CATALOG[p.material] || PIPE_CATALOG.PVC;
+  return cat.find(d => d.mm === p.diameter) || cat[p.diamIdx] || cat[0];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SEARCH LOCATION
+// ═══════════════════════════════════════════════════════════════════
+function searchLocation() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+
+  const coordMatch = q.match(/^([-+]?\d+(\.\d+)?)[,\s]+([-+]?\d+(\.\d+)?)$/);
+  if (coordMatch) {
+    const lat = parseFloat(coordMatch[1]);
+    const lng = parseFloat(coordMatch[3]);
+    map.flyTo([lat, lng], 17, { duration: 1.2 });
+    return;
+  }
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.length > 0) {
+        const item = data[0];
+        map.flyTo([parseFloat(item.lat), parseFloat(item.lon)], 16, { duration: 1.2 });
+      } else {
+        alert(`Lokasi "${q}" tidak ditemukan. Coba masukkan nama jalan/kota atau koordinat.`);
+      }
+    })
+    .catch(() => {
+      alert('Pencarian online terkendala. Anda dapat memasukkan koordinat lat, lng langsung (contoh: -6.2088, 106.8456).');
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GEOJSON EXPORT & IMPORT
+// ═══════════════════════════════════════════════════════════════════
+function exportGeoJSON() {
+  const features = [];
+
+  pipes.forEach(p => {
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: p.points.map(pt => [pt.lng, pt.lat]) },
+      properties: { ...p.props, elementType: 'pipe' }
+    });
+  });
+
+  accessories.forEach(a => {
+    const latlng = a.marker.getLatLng();
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] },
+      properties: { ...a.props, elementType: 'accessory' }
+    });
+  });
+
+  const geojson = { type: 'FeatureCollection', features, kopData };
+  const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `jaringan-pipa-${Date.now()}.geojson`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importGeoJSON() {
+  document.getElementById('file-input').click();
+}
+
+function handleFileImport(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const geojson = JSON.parse(e.target.result);
+      loadGeoJSON(geojson);
+    } catch (err) {
+      alert('File GeoJSON tidak valid: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+function loadGeoJSON(geojson) {
+  if (!geojson.features) return;
+  
+  if (geojson.kopData) {
+    kopData = { ...DEFAULT_KOP_DATA, ...geojson.kopData };
+    renderKopView();
+  }
+
+  geojson.features.forEach(f => {
+    const p = f.properties;
+    if (p.elementType === 'pipe' && f.geometry.type === 'LineString') {
+      const pts = f.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
+      const props = {
+        ...p,
+        length: calcPolylineLength(pts),
+        lineStyle: p.lineStyle || (p.material === 'HDPE' ? 'dash' : 'solid'),
+        weight: p.weight || (getSelectedDiameterByProps(p)?.weight || 6),
+        customLabel: p.customLabel || undefined,
+        labelPos: p.labelPos || undefined
+      };
+      const poly = createPipePolyline(pts, props);
+      poly.addTo(map);
+      pipes.push({ id: p.id || ('pipe_' + nextId++), polyline: poly, props, points: pts });
+    } else if (p.elementType === 'accessory' && f.geometry.type === 'Point') {
+      const latlng = L.latLng(f.geometry.coordinates[1], f.geometry.coordinates[0]);
+      const acc = ACCESSORIES.find(a => a.id === p.type) || ACCESSORIES[0];
+      const icon = createAccIcon(acc);
+      const marker = L.marker(latlng, { icon, draggable: true }).addTo(map);
+      marker.bindTooltip(`[${acc.label}] ${p.name}`, { className: 'custom-tooltip' });
+      marker.on('click', (ev) => { L.DomEvent.stopPropagation(ev); onAccClick(p.id); });
+      marker.on('dragend', () => updateStats());
+      accessories.push({ id: p.id || ('acc_' + nextId++), marker, props: { ...p } });
+    }
+  });
+
+  updateStats();
+  updatePipeCallouts();
+  fitNetworkInView();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+  if (e.key === 'Enter') {
+    if (currentMode === 'pipe' && drawingPipe) finishPipe();
+    return;
+  }
+  if (e.key === 'Backspace' || (e.ctrlKey && e.key.toLowerCase() === 'z')) {
+    if (currentMode === 'pipe' && drawingPipe) {
+      e.preventDefault();
+      undoLastPoint();
+    }
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (isLayoutMode) {
+      exitLayoutMode();
+      return;
+    }
+    cancelDrawing();
+    cancelMeasure();
+    clearVertexHandles();
+    setMode('select');
+    return;
+  }
+
+  switch(e.key.toLowerCase()) {
+    case 's': setMode('select'); break;
+    case 'p': setMode('pipe'); break;
+    case 'a': setMode('accessory'); break;
+    case 'd': setMode('delete'); break;
+    case 'm': setMode('measure'); break;
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  BOOTSTRAP
+// ═══════════════════════════════════════════════════════════════════
+initMap();
+buildDiameterUI();
+buildAccessoryUI();
+updateStats();
+loadSavedKopData();
+updateLinePreview();
+
+// Geolocation center
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+  }, () => {});
+}
+</script>
+</body>
+</html>
