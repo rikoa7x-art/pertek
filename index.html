@@ -737,18 +737,74 @@
       letter-spacing: 1.5px; padding: 4px 0;
     }
 
-    /* Kop Pengesahan (3 Pejabat) */
+    /* Kop Pengesahan (3 Pejabat: Diperiksa, Mengetahui, Mengesahkan) */
+    .kop-sign-container {
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 0 !important;
+      border-bottom: 1px solid #000000;
+      box-sizing: border-box;
+    }
     .kop-sign-col {
-      display: flex; flex-direction: column; align-items: center; text-align: center;
-      padding: 3px 2px; border-bottom: 1px solid #000;
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      padding: 4px 6px 3px;
+      border-bottom: 1px solid #000000;
+      box-sizing: border-box;
     }
-    .kop-sign-col:last-child { border-bottom: none; }
-    .kop-sign-role { font-size: 7px; font-weight: 700; line-height: 1.1; text-transform: uppercase; margin-bottom: 1px; }
+    .kop-sign-col:last-child {
+      border-bottom: none;
+    }
+    .kop-sign-role {
+      font-size: 6.8px;
+      font-weight: 700;
+      line-height: 1.15;
+      text-transform: uppercase;
+      color: #000000;
+      width: 100%;
+      flex-shrink: 0;
+    }
     .kop-sign-img-box {
-      height: 22px; display: flex; align-items: center; justify-content: center;
+      flex: 1 1 auto;
+      min-height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 2px 0;
     }
-    .kop-sign-name { font-size: 8px; font-weight: 900; text-decoration: underline; }
-    .kop-sign-nip { font-size: 6.8px; color: #334155; }
+    .kop-sign-img-box svg {
+      max-height: 24px;
+      width: auto;
+    }
+    .kop-sign-person {
+      width: 100%;
+      text-align: center;
+      flex-shrink: 0;
+      margin-top: auto;
+    }
+    .kop-sign-name {
+      font-size: 7.8px;
+      font-weight: 900;
+      text-decoration: underline;
+      text-transform: uppercase;
+      color: #000000;
+      line-height: 1.2;
+    }
+    .kop-sign-nip {
+      font-size: 6.5px;
+      color: #334155;
+      font-weight: 600;
+      line-height: 1.1;
+      margin-top: 1px;
+    }
 
     /* Kop Bottom Metadata Grid */
     .kop-meta-grid {
@@ -1526,7 +1582,7 @@
           </div>
 
           <!-- KANAN: KOP GAMBAR (Etiket Standar PU / PDAM) -->
-          <div class="sheet-right-pane" id="kop-pane">
+          <div class="sheet-right-pane" id="kop-pane" ondblclick="openKopModal()" title="Klik ganda untuk mengedit Kop Gambar">
 
             <!-- 1. KETERANGAN & DETAIL STANDAR -->
             <div class="kop-box" style="flex: 0 0 auto;">
@@ -1635,38 +1691,50 @@
             </div>
 
             <!-- 7. PENGESAHAN (DIPERIKSA, MENGETAHUI, MENGESAHKAN) -->
-            <div class="kop-box" style="flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:0;">
+            <div class="kop-box kop-sign-container">
               
               <!-- 7A: Diperiksa Oleh -->
               <div class="kop-sign-col">
                 <div class="kop-sign-role" id="kop-view-pemeriksa-jabatan">
-                  DIPERIKSA OLEH :<br>ASISTEN MANAJER PERPIPAAN
+                  DIPERIKSA OLEH :<br>ASISTEN MANAJER PERPIPAAN<br>PERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG
                 </div>
-                <div class="kop-sign-name" id="kop-view-pemeriksa-nama">YUNIA RACHMAWATI</div>
-                <div class="kop-sign-nip" id="kop-view-pemeriksa-nip">NIPP. 942 207 301</div>
+                <div class="kop-sign-img-box" id="kop-sign-box-pemeriksa">
+                  <!-- Ruang Tanda Tangan -->
+                </div>
+                <div class="kop-sign-person">
+                  <div class="kop-sign-name" id="kop-view-pemeriksa-nama">YUNIA RACHMAWATI</div>
+                  <div class="kop-sign-nip" id="kop-view-pemeriksa-nip">NIPP. 942 207 301</div>
+                </div>
               </div>
 
               <!-- 7B: Mengetahui -->
               <div class="kop-sign-col">
                 <div class="kop-sign-role" id="kop-view-mengetahui-jabatan">
-                  MENGETAHUI :<br>MANAJER DIVISI PERENCANAAN TEKNIK
+                  MENGETAHUI :<br>MANAJER DIVISI PERENCANAAN TEKNIK<br>PERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG
                 </div>
-                <!-- Signature mark SVG -->
-                <div class="kop-sign-img-box">
+                <div class="kop-sign-img-box" id="kop-sign-box-mengetahui">
                   <svg viewBox="0 0 100 24" width="70" height="20">
                     <path d="M10 18 Q20 5 35 12 T60 8 T85 15 Q95 20 70 20 T30 18" fill="none" stroke="#000" stroke-width="1.3"/>
                   </svg>
                 </div>
-                <div class="kop-sign-name" id="kop-view-mengetahui-nama">DADI RISWADI</div>
-                <div class="kop-sign-nip" id="kop-view-mengetahui-nip">NIPP. 760 511 183</div>
+                <div class="kop-sign-person">
+                  <div class="kop-sign-name" id="kop-view-mengetahui-nama">DADI RISWADI</div>
+                  <div class="kop-sign-nip" id="kop-view-mengetahui-nip">NIPP. 793 511 183</div>
+                </div>
               </div>
 
               <!-- 7C: Mengesahkan -->
-              <div class="kop-sign-col" style="border-bottom:none;">
+              <div class="kop-sign-col">
                 <div class="kop-sign-role" id="kop-view-pengesah-jabatan">
-                  MENGESAHKAN :<br>DIREKTUR BIDANG TEKNIK
+                  MENGESAHKAN :<br>DIREKTUR BIDANG TEKNIK<br>PERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG
                 </div>
-                <div class="kop-sign-name" id="kop-view-pengesah-nama">NANA RUHANA, ST</div>
+                <div class="kop-sign-img-box" id="kop-sign-box-pengesah">
+                  <!-- Ruang Tanda Tangan -->
+                </div>
+                <div class="kop-sign-person">
+                  <div class="kop-sign-name" id="kop-view-pengesah-nama">NANA RUHANA, ST</div>
+                  <div class="kop-sign-nip" id="kop-view-pengesah-nip" style="display:none;"></div>
+                </div>
               </div>
 
             </div>
@@ -1767,12 +1835,12 @@
     <input type="text" id="km-judul" />
 
     <hr style="border:none;border-top:1px solid #334155;margin:10px 0;">
-    <div style="font-weight:700;color:#38bdf8;font-size:12px;margin-bottom:6px;">Pejabat & Pengesahan:</div>
+    <div style="font-weight:700;color:#38bdf8;font-size:12px;margin-bottom:6px;">Pejabat & Pengesahan (3 Kolom):</div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div>
-        <label>Diperiksa Oleh (Jabatan)</label>
-        <input type="text" id="km-pemeriksa-jabatan" />
+        <label>Diperiksa Oleh (Jabatan & Instansi)</label>
+        <textarea id="km-pemeriksa-jabatan" rows="3" style="width:100%;font-size:11px;font-family:inherit;padding:5px;border-radius:4px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;resize:vertical;"></textarea>
       </div>
       <div>
         <label>Nama & NIPP Pemeriksa</label>
@@ -1781,8 +1849,8 @@
       </div>
 
       <div>
-        <label>Mengetahui (Jabatan)</label>
-        <input type="text" id="km-mengetahui-jabatan" />
+        <label>Mengetahui (Jabatan & Instansi)</label>
+        <textarea id="km-mengetahui-jabatan" rows="3" style="width:100%;font-size:11px;font-family:inherit;padding:5px;border-radius:4px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;resize:vertical;"></textarea>
       </div>
       <div>
         <label>Nama & NIPP Mengetahui</label>
@@ -1791,13 +1859,21 @@
       </div>
 
       <div>
-        <label>Mengesahkan (Jabatan)</label>
-        <input type="text" id="km-pengesah-jabatan" />
+        <label>Mengesahkan (Jabatan & Instansi)</label>
+        <textarea id="km-pengesah-jabatan" rows="3" style="width:100%;font-size:11px;font-family:inherit;padding:5px;border-radius:4px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;resize:vertical;"></textarea>
       </div>
       <div>
-        <label>Nama Pejabat Mengesahkan</label>
+        <label>Nama & NIP Mengesahkan</label>
         <input type="text" id="km-pengesah-nama" placeholder="Nama Lengkap, Gelar" />
+        <input type="text" id="km-pengesah-nip" placeholder="NIPP / NIP (Opsional)" />
       </div>
+    </div>
+
+    <div style="margin-top:8px;padding:6px 10px;background:#1e293b;border-radius:6px;border:1px solid #334155;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:11px;cursor:pointer;color:#e2e8f0;font-weight:600;margin:0;">
+        <input type="checkbox" id="km-show-ttd" checked />
+        <span>Tampilkan Tanda Tangan Digital pada Kop (hilangkan centang untuk tanda tangan basah & cap)</span>
+      </label>
     </div>
 
     <hr style="border:none;border-top:1px solid #334155;margin:10px 0;">
@@ -2244,9 +2320,11 @@ const DEFAULT_KOP_DATA = {
   pemeriksa_nip: 'NIPP. 942 207 301',
   mengetahui_jabatan: 'MENGETAHUI :\nMANAJER DIVISI PERENCANAAN TEKNIK\nPERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG',
   mengetahui_nama: 'DADI RISWADI',
-  mengetahui_nip: 'NIPP. 760 511 183',
+  mengetahui_nip: 'NIPP. 793 511 183',
   pengesah_jabatan: 'MENGESAHKAN :\nDIREKTUR BIDANG TEKNIK\nPERUMDA AIR MINUM TIRTA RANGGA KABUPATEN SUBANG',
   pengesah_nama: 'NANA RUHANA, ST',
+  pengesah_nip: '',
+  show_ttd: true,
   tanggal: '21 Oktober 2026',
   skala: '1 : 1.000',
   no_gambar: '01',
@@ -4173,6 +4251,28 @@ function renderKopView() {
 
   document.getElementById('kop-view-pengesah-jabatan').innerHTML = kopData.pengesah_jabatan.replace(/\n/g, '<br>');
   document.getElementById('kop-view-pengesah-nama').textContent = kopData.pengesah_nama;
+  const elPengesahNip = document.getElementById('kop-view-pengesah-nip');
+  if (elPengesahNip) {
+    if (kopData.pengesah_nip && kopData.pengesah_nip.trim()) {
+      elPengesahNip.textContent = kopData.pengesah_nip;
+      elPengesahNip.style.display = 'block';
+    } else {
+      elPengesahNip.textContent = '';
+      elPengesahNip.style.display = 'none';
+    }
+  }
+
+  // Tanda tangan digital toggle
+  const boxMengetahui = document.getElementById('kop-sign-box-mengetahui');
+  if (boxMengetahui) {
+    if (kopData.show_ttd !== false) {
+      boxMengetahui.innerHTML = `<svg viewBox="0 0 100 24" width="70" height="20">
+        <path d="M10 18 Q20 5 35 12 T60 8 T85 15 Q95 20 70 20 T30 18" fill="none" stroke="#000" stroke-width="1.3"/>
+      </svg>`;
+    } else {
+      boxMengetahui.innerHTML = '';
+    }
+  }
 
   document.getElementById('kop-view-tanggal').textContent = kopData.tanggal;
   document.getElementById('kop-view-skala').textContent = kopData.skala;
@@ -4201,6 +4301,11 @@ function openKopModal() {
 
   document.getElementById('km-pengesah-jabatan').value = kopData.pengesah_jabatan;
   document.getElementById('km-pengesah-nama').value = kopData.pengesah_nama;
+  const kmPengesahNip = document.getElementById('km-pengesah-nip');
+  if (kmPengesahNip) kmPengesahNip.value = kopData.pengesah_nip || '';
+
+  const kmShowTtd = document.getElementById('km-show-ttd');
+  if (kmShowTtd) kmShowTtd.checked = kopData.show_ttd !== false;
 
   document.getElementById('km-tanggal').value = kopData.tanggal;
   document.getElementById('km-skala').value = kopData.skala;
@@ -4235,6 +4340,11 @@ function saveKopModal() {
 
   kopData.pengesah_jabatan = document.getElementById('km-pengesah-jabatan').value;
   kopData.pengesah_nama = document.getElementById('km-pengesah-nama').value;
+  const kmPengesahNip = document.getElementById('km-pengesah-nip');
+  if (kmPengesahNip) kopData.pengesah_nip = kmPengesahNip.value.trim();
+
+  const kmShowTtd = document.getElementById('km-show-ttd');
+  if (kmShowTtd) kopData.show_ttd = kmShowTtd.checked;
 
   kopData.tanggal = document.getElementById('km-tanggal').value;
   kopData.skala = document.getElementById('km-skala').value;
