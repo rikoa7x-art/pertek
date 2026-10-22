@@ -90,7 +90,7 @@
 
     /* ─── Mode Buttons Bar (Compact 1 Row) ──────────────────── */
     #mode-buttons {
-      padding: 6px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+      padding: 6px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;
       background: #0b1120; border-bottom: 1px solid #1e293b; flex-shrink: 0;
     }
     .mode-btn {
@@ -109,8 +109,8 @@
     .mode-btn.danger-mode.active {
       background: #ef4444; border-color: #f87171; box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
     }
-    .mode-btn .icon { font-size: 15px; line-height: 1.1; margin-bottom: 2px; }
-    .mode-btn .label { font-size: 10px; font-weight: 600; }
+    .mode-btn .icon { font-size: 14px; line-height: 1.1; margin-bottom: 2px; }
+    .mode-btn .label { font-size: 9.5px; font-weight: 600; }
 
     /* ─── Sidebar Navigation Tabs ───────────────────────────── */
     .sidebar-tabs {
@@ -478,6 +478,62 @@
       margin-top: -1px;
     }
     .pipe-leader-arrow-head {
+      background: transparent !important;
+      border: none !important;
+    }
+
+    /* ─── Manual Pipe Callout Labels ───────────────────────── */
+    .manual-callout-marker {
+      background: transparent !important;
+      border: none !important;
+      cursor: grab;
+    }
+    .manual-callout-marker:active { cursor: grabbing; }
+    .manual-callout-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
+    }
+    .manual-callout-box {
+      border: 1.5px solid #0f172a;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: Arial, Helvetica, sans-serif;
+      border-radius: 4px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+    .manual-callout-box.style-white { background: #ffffff; color: #000000; border-color: #000000; }
+    .manual-callout-box.style-yellow { background: #fef08a; color: #713f12; border-color: #ca8a04; }
+    .manual-callout-box.style-cyan { background: #e0f2fe; color: #0369a1; border-color: #0284c7; }
+    .manual-callout-box.style-dark { background: #0f172a; color: #f8fafc; border-color: #38bdf8; }
+    
+    .manual-callout-box.size-small { font-size: 9px; padding: 2px 6px; }
+    .manual-callout-box.size-medium { font-size: 10.5px; padding: 3px 8px; }
+    .manual-callout-box.size-large { font-size: 12.5px; padding: 4px 10px; }
+    
+    .manual-callout-actions {
+      display: inline-flex; align-items: center; gap: 2px; margin-left: 4px;
+    }
+    .manual-callout-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 3px; padding: 1px 4px; font-size: 9px; cursor: pointer;
+      line-height: 1; transition: all 0.15s;
+    }
+    .manual-callout-btn:hover { background: #0284c7; color: #fff; border-color: #0284c7; }
+    .manual-callout-btn.btn-del:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+    .manual-leader-target-dot {
       background: transparent !important;
       border: none !important;
     }
@@ -1133,6 +1189,7 @@
     <div class="shortcut-row"><span>Pilih / Edit</span><div class="shortcut-keys"><span class="kbd">S</span></div></div>
     <div class="shortcut-row"><span>Gambar Pipa</span><div class="shortcut-keys"><span class="kbd">P</span></div></div>
     <div class="shortcut-row"><span>Pasang Aksesori</span><div class="shortcut-keys"><span class="kbd">A</span></div></div>
+    <div class="shortcut-row"><span>Tambah Label Manual</span><div class="shortcut-keys"><span class="kbd">L</span></div></div>
     <div class="shortcut-row"><span>Mode Hapus</span><div class="shortcut-keys"><span class="kbd">D</span></div></div>
     <div class="shortcut-row"><span>Ukur Jarak</span><div class="shortcut-keys"><span class="kbd">M</span></div></div>
 
@@ -1249,6 +1306,10 @@
       <button class="mode-btn" data-mode="accessory" onclick="setMode('accessory')" title="Pasang Aksesori (A)">
         <span class="icon">⚙</span>
         <span class="label">Aksesori</span>
+      </button>
+      <button class="mode-btn" data-mode="label" onclick="setMode('label')" title="Tambah Label Manual (L)">
+        <span class="icon">🏷️</span>
+        <span class="label">Label</span>
       </button>
       <button class="mode-btn" data-mode="measure" onclick="setMode('measure')" title="Ukur Jarak (M)">
         <span class="icon">📏</span>
@@ -1862,6 +1923,65 @@
   </div>
 </div>
 
+<!-- ═══ MANUAL PIPE LABEL MODAL ═══ -->
+<div class="modal-overlay" id="manual-label-modal">
+  <div class="modal-box" style="width: 520px; max-width: 95vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h3 style="margin:0;">🏷️ Tambah Label Keterangan Pipa Manual</h3>
+      <button onclick="closeManualLabelModal()" style="background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    
+    <div id="mlm-target-info" style="font-size:11px;color:#7dd3fc;background:#1e293b;padding:8px 10px;border-radius:6px;margin-bottom:10px;border-left:3px solid #38bdf8;line-height:1.4;">
+      Titik Pipa: Terpilih
+    </div>
+
+    <label>Teks Keterangan / Notasi Label:</label>
+    <textarea id="mlm-text" rows="3" style="width:100%;font-size:12.5px;padding:8px 10px;border-radius:6px;background:#0f172a;border:1px solid #334155;color:#f8fafc;font-family:Arial,sans-serif;" placeholder="Ketik keterangan atau klik salah satu pilihan cepat di bawah..."></textarea>
+    
+    <div style="margin:8px 0 10px;">
+      <label style="font-size:10px;color:#94a3b8;margin-bottom:4px;display:block;">⚡ Pilihan Cepat / Preset (Klik untuk mengisi):</label>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('pipe_spec')">💧 Renc. Spesifikasi Pipa</button>
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('crossing_road')">🛣️ Crossing Jalan</button>
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('crossing_culvert')">🌊 Crossing Saluran</button>
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('bridge')">🌉 Jembatan Pipa</button>
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('sta')">📍 STA 0+...</button>
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('trench')">⛏️ Kedalaman H=0.90m</button>
+        <button type="button" class="prop-quick-btn" onclick="applyManualLabelPreset('conn')">🔗 Koneksi Pipa Eksisting</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label>Gaya Tampilan Kotak:</label>
+        <select id="mlm-style">
+          <option value="white">Putih Standar PU (Border Hitam)</option>
+          <option value="yellow">Kuning Perhatian (Engineering)</option>
+          <option value="cyan">Biru Muda (PDAM TRS)</option>
+          <option value="dark">Gelap (High Contrast)</option>
+        </select>
+      </div>
+      <div>
+        <label>Ukuran Huruf:</label>
+        <select id="mlm-size">
+          <option value="small">Kecil (9px)</option>
+          <option value="medium" selected>Standar (11px)</option>
+          <option value="large">Besar (13px)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="help-hint" style="margin-top:12px;font-size:11px;">
+      💡 <strong>Petunjuk:</strong> Setelah disimpan, kotak label dapat digeser (*drag*) ke posisi mana pun di peta. Garis tanda panah petunjuk (*leader arrow*) akan secara otomatis terus mengarah ke titik garis pipa.
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="modal-btn secondary" onclick="closeManualLabelModal()">Batal</button>
+      <button class="modal-btn primary" onclick="saveManualLabelModal()">Simpan Label</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ ACC EDIT MODAL ═══ -->
 <div class="modal-overlay" id="acc-modal">
   <div class="modal-box">
@@ -2165,6 +2285,11 @@ let pipeLeaderLines      = [];
 let editingCalloutPipeId = null;
 let showPipeLabels       = true;
 let isLayoutMode         = false;
+let manualLabels            = [];
+let manualLabelMarkers      = [];
+let manualLabelLeaderLines  = [];
+let editingManualLabelId    = null;
+let pendingLabelTarget      = null;
 
 // ═══════════════════════════════════════════════════════════════════
 //  INIT MAP
@@ -2515,6 +2640,7 @@ function setMode(mode) {
     select: 'Pilih / Edit',
     pipe: 'Gambar Pipa',
     accessory: 'Pasang Aksesori',
+    label: 'Tambah Label Manual',
     delete: 'Mode Hapus',
     measure: 'Ukur Jarak'
   };
@@ -2524,12 +2650,16 @@ function setMode(mode) {
     switchSidebarTab('pipe');
   } else if (mode === 'accessory') {
     switchSidebarTab('acc');
-  } else if (mode === 'select') {
+  } else if (mode === 'select' || mode === 'label') {
     switchSidebarTab('prop');
   }
 
+  if (mode === 'label') {
+    showToast('🏷️ Klik pada garis pipa untuk memasang label keterangan manual', 'info', 3000);
+  }
+
   const mc = document.getElementById('map');
-  mc.classList.toggle('draw-cursor', mode === 'pipe' || mode === 'accessory' || mode === 'measure');
+  mc.classList.toggle('draw-cursor', mode === 'pipe' || mode === 'accessory' || mode === 'measure' || mode === 'label');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2575,6 +2705,8 @@ function onMapClick(e) {
     handlePipeClick(targetLatLng);
   } else if (currentMode === 'accessory') {
     placeAccessory(targetLatLng);
+  } else if (currentMode === 'label') {
+    handleLabelMapClick(e.latlng);
   } else if (currentMode === 'measure') {
     handleMeasureClick(targetLatLng);
   } else if (currentMode === 'select') {
@@ -2730,7 +2862,7 @@ function createPipePolyline(pts, props) {
 
   poly.on('click', (ev) => {
     L.DomEvent.stopPropagation(ev);
-    onPipeClick(props.id);
+    onPipeClick(props.id, ev.latlng);
   });
 
   return poly;
@@ -2851,6 +2983,7 @@ function updatePipeCallouts() {
 function togglePipeLabels() {
   showPipeLabels = !showPipeLabels;
   updatePipeCallouts();
+  renderManualLabels();
   const btn = document.getElementById('btn-toggle-labels');
   if (btn) btn.innerHTML = `🏷️ Label: ${showPipeLabels ? 'ON' : 'OFF'}`;
 }
@@ -2923,6 +3056,314 @@ function resetPipeCalloutPosQuick(pipeId) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  MANUAL PIPE LABELS & NOTATIONS
+// ═══════════════════════════════════════════════════════════════════
+function findClosestPipePoint(latlng, maxPixelDist = 35) {
+  const mousePt = map.latLngToContainerPoint(latlng);
+  let closestDist = maxPixelDist;
+  let closestPoint = null;
+  let closestPipe = null;
+
+  pipes.forEach(p => {
+    for (let i = 1; i < p.points.length; i++) {
+      const p1 = map.latLngToContainerPoint(p.points[i - 1]);
+      const p2 = map.latLngToContainerPoint(p.points[i]);
+      const proj = projectPointOnSegment(mousePt, p1, p2);
+      if (proj && proj.dist < closestDist) {
+        closestDist = proj.dist;
+        closestPoint = map.containerPointToLatLng(proj.point);
+        closestPipe = p;
+      }
+    }
+  });
+
+  return { point: closestPoint, pipe: closestPipe };
+}
+
+function projectPointOnSegment(p, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) {
+    return { point: a, dist: Math.hypot(p.x - a.x, p.y - a.y) };
+  }
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const projX = a.x + t * dx;
+  const projY = a.y + t * dy;
+  return {
+    point: L.point(projX, projY),
+    dist: Math.hypot(p.x - projX, p.y - projY)
+  };
+}
+
+function handleLabelMapClick(clickLatLng) {
+  const result = findClosestPipePoint(clickLatLng, 35);
+  if (result.pipe && result.point) {
+    openNewManualLabelModal(result.point, result.pipe);
+  } else if (pipes.length > 0) {
+    let bestDist = Infinity;
+    let bestPipe = null;
+    let bestPoint = null;
+    pipes.forEach(p => {
+      p.points.forEach(pt => {
+        const d = map.latLngToContainerPoint(clickLatLng).distanceTo(map.latLngToContainerPoint(pt));
+        if (d < bestDist) {
+          bestDist = d;
+          bestPipe = p;
+          bestPoint = pt;
+        }
+      });
+    });
+    if (bestPipe && bestDist < 80) {
+      openNewManualLabelModal(bestPoint, bestPipe);
+    } else {
+      showToast('ℹ️ Klik lebih dekat ke garis pipa untuk memasang label', 'warning', 2500);
+    }
+  } else {
+    showToast('⚠️ Belum ada pipa di peta. Silakan gambar pipa terlebih dahulu!', 'warning', 3000);
+  }
+}
+
+function triggerAddLabelOnPipe(pipeId, lat, lng) {
+  map.closePopup();
+  const pobj = pipes.find(p => p.id === pipeId);
+  if (!pobj) return;
+  const anchor = (lat && lng) ? L.latLng(lat, lng) : getMidpoint(pobj.points);
+  openNewManualLabelModal(anchor, pobj);
+}
+
+function openNewManualLabelModal(anchorLatLng, pipeObj) {
+  editingManualLabelId = null;
+  pendingLabelTarget = {
+    anchor: anchorLatLng,
+    pipe: pipeObj
+  };
+  
+  const targetInfo = document.getElementById('mlm-target-info');
+  targetInfo.innerHTML = `
+    <strong>Target Pipa:</strong> ${escapeHtml(pipeObj.props.name)} (${pipeObj.props.material} Ø ${pipeObj.props.inch})<br>
+    <span style="color:#94a3b8;font-size:10px;">Titik: Lat ${anchorLatLng.lat.toFixed(6)}, Lng ${anchorLatLng.lng.toFixed(6)}</span>
+  `;
+  
+  document.getElementById('mlm-text').value = `Renc. Pipa ${pipeObj.props.material} Ø ${pipeObj.props.inch} (${pipeObj.props.diameter} mm)`;
+  document.getElementById('mlm-style').value = 'white';
+  document.getElementById('mlm-size').value = 'medium';
+  
+  document.getElementById('manual-label-modal').classList.add('open');
+  setTimeout(() => document.getElementById('mlm-text').focus(), 150);
+}
+
+function openEditManualLabelModal(labelId) {
+  const lbl = manualLabels.find(l => l.id === labelId);
+  if (!lbl) return;
+  editingManualLabelId = labelId;
+  const pobj = pipes.find(p => p.id === lbl.pipeId) || (pipes[0] || null);
+  pendingLabelTarget = {
+    anchor: lbl.anchor,
+    pipe: pobj
+  };
+
+  const targetInfo = document.getElementById('mlm-target-info');
+  targetInfo.innerHTML = `
+    <strong>Edit Label:</strong> ${pobj ? escapeHtml(pobj.props.name) : 'Label Garis Pipa'}<br>
+    <span style="color:#94a3b8;font-size:10px;">Titik: Lat ${lbl.anchor.lat.toFixed(6)}, Lng ${lbl.anchor.lng.toFixed(6)}</span>
+  `;
+
+  document.getElementById('mlm-text').value = lbl.text;
+  document.getElementById('mlm-style').value = lbl.style || 'white';
+  document.getElementById('mlm-size').value = lbl.size || 'medium';
+
+  document.getElementById('manual-label-modal').classList.add('open');
+  setTimeout(() => document.getElementById('mlm-text').focus(), 150);
+}
+
+function closeManualLabelModal() {
+  document.getElementById('manual-label-modal').classList.remove('open');
+  editingManualLabelId = null;
+  pendingLabelTarget = null;
+}
+
+function applyManualLabelPreset(preset) {
+  if (!pendingLabelTarget || !pendingLabelTarget.pipe) return;
+  const p = pendingLabelTarget.pipe.props;
+  let text = '';
+  switch(preset) {
+    case 'pipe_spec':
+      text = `Renc. Pipa ${p.material} Ø ${p.inch} (${p.diameter} mm) - L = ${p.length.toFixed(0)} m'`;
+      break;
+    case 'crossing_road':
+      text = `Crossing Jalan Aspal (Pipa Pelindung Ø ${p.diameter + 50} mm)`;
+      break;
+    case 'crossing_culvert':
+      text = `Crossing Saluran / Gorong-gorong Air`;
+      break;
+    case 'bridge':
+      text = `Jembatan Pipa Air Bersih Sp. 6.00 m'`;
+      break;
+    case 'sta':
+      text = `STA 0+050 (Elevasi +... m)`;
+      break;
+    case 'trench':
+      text = `Galian Bahu Jalan (H = 0.90 m, B = 0.50 m)`;
+      break;
+    case 'conn':
+      text = `Titik Koneksi ke Pipa Distribusi Eksisting`;
+      break;
+  }
+  if (text) {
+    document.getElementById('mlm-text').value = text;
+  }
+}
+
+function saveManualLabelModal() {
+  const text = document.getElementById('mlm-text').value.trim();
+  if (!text) {
+    showToast('⚠️ Silakan isi teks label keterangan terlebih dahulu', 'warning', 2500);
+    return;
+  }
+
+  const style = document.getElementById('mlm-style').value;
+  const size = document.getElementById('mlm-size').value;
+
+  saveStateForUndo(editingManualLabelId ? 'Edit Label Manual' : 'Tambah Label Manual');
+
+  if (editingManualLabelId) {
+    const lbl = manualLabels.find(l => l.id === editingManualLabelId);
+    if (lbl) {
+      lbl.text = text;
+      lbl.style = style;
+      lbl.size = size;
+      showToast('🏷️ Label keterangan berhasil diperbarui', 'success', 2500);
+    }
+  } else {
+    if (!pendingLabelTarget) return;
+    const anchor = pendingLabelTarget.anchor;
+    const pipe = pendingLabelTarget.pipe;
+    const containerPt = map.latLngToContainerPoint(anchor);
+    const offsetPt = L.point(containerPt.x + 35, containerPt.y - 35);
+    const initialPos = map.containerPointToLatLng(offsetPt);
+
+    const newLabel = {
+      id: 'mlabel_' + (nextId++),
+      pipeId: pipe ? pipe.id : null,
+      text: text,
+      anchor: anchor,
+      pos: initialPos,
+      style: style,
+      size: size,
+      color: pipe ? pipe.props.color : '#38bdf8'
+    };
+    manualLabels.push(newLabel);
+    showToast('🏷️ Label keterangan berhasil ditambahkan ke garis pipa!', 'success', 3000);
+  }
+
+  renderManualLabels();
+  closeManualLabelModal();
+
+  if (selectedPipeObj) {
+    showProperties('pipe', selectedPipeObj.props);
+  }
+}
+
+function deleteManualLabel(labelId) {
+  saveStateForUndo('Hapus Label Manual');
+  manualLabels = manualLabels.filter(l => l.id !== labelId);
+  renderManualLabels();
+  if (selectedPipeObj) {
+    showProperties('pipe', selectedPipeObj.props);
+  }
+  showToast('🗑 Label berhasil dihapus', 'info', 2000);
+}
+
+function renderManualLabels() {
+  manualLabelMarkers.forEach(m => map.removeLayer(m));
+  manualLabelMarkers = [];
+  manualLabelLeaderLines.forEach(l => map.removeLayer(l));
+  manualLabelLeaderLines = [];
+
+  if (!showPipeLabels) return;
+
+  manualLabels.forEach(lbl => {
+    const pobj = pipes.find(p => p.id === lbl.pipeId);
+    const swatchColor = pobj ? pobj.props.color : (lbl.color || '#38bdf8');
+
+    const leader = L.polyline([lbl.pos, lbl.anchor], {
+      color: '#0f172a',
+      weight: 1.8,
+      dashArray: '4, 3',
+      opacity: 0.85
+    }).addTo(map);
+    manualLabelLeaderLines.push(leader);
+
+    const dotIcon = L.divIcon({
+      className: 'manual-leader-target-dot',
+      html: `<div style="width:11px;height:11px;border-radius:50%;background:${swatchColor};border:2px solid #0f172a;box-shadow:0 0 5px rgba(0,0,0,0.6);" title="Titik label pada garis pipa"></div>`,
+      iconSize: [11, 11],
+      iconAnchor: [5.5, 5.5]
+    });
+    const anchorMarker = L.marker(lbl.anchor, { icon: dotIcon, interactive: false }).addTo(map);
+    manualLabelLeaderLines.push(anchorMarker);
+
+    const icon = L.divIcon({
+      className: 'manual-callout-marker',
+      html: `
+        <div class="manual-callout-container">
+          <div class="manual-callout-box style-${lbl.style || 'white'} size-${lbl.size || 'medium'}" title="Geser (drag) untuk memindahkan notasi. Klik ✏️ untuk edit teks.">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${swatchColor};border:1px solid rgba(0,0,0,0.3);flex-shrink:0;"></span>
+            <span style="white-space:pre-wrap;line-height:1.2;">${escapeHtml(lbl.text)}</span>
+            <span class="manual-callout-actions">
+              <span class="manual-callout-btn" onclick="event.stopPropagation(); openEditManualLabelModal('${lbl.id}')" title="Edit Teks Label">✏️</span>
+              <span class="manual-callout-btn btn-del" onclick="event.stopPropagation(); deleteManualLabel('${lbl.id}')" title="Hapus Label Ini">🗑</span>
+            </span>
+          </div>
+        </div>`,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0]
+    });
+
+    const m = L.marker(lbl.pos, {
+      icon,
+      draggable: true,
+      zIndexOffset: 700
+    }).addTo(map);
+
+    m.on('drag', (e) => {
+      lbl.pos = e.target.getLatLng();
+      leader.setLatLngs([lbl.pos, lbl.anchor]);
+    });
+
+    m.on('dragend', (e) => {
+      lbl.pos = e.target.getLatLng();
+      renderManualLabels();
+    });
+
+    m.on('dblclick', (e) => {
+      L.DomEvent.stopPropagation(e);
+      openEditManualLabelModal(lbl.id);
+    });
+
+    manualLabelMarkers.push(m);
+  });
+}
+
+function renderPipeManualLabelsList(pipeId) {
+  const labelsOnPipe = manualLabels.filter(l => l.pipeId === pipeId);
+  if (labelsOnPipe.length === 0) {
+    return `<div style="font-size:10px;color:#64748b;font-style:italic;padding:4px 0;">Belum ada label manual di pipa ini.</div>`;
+  }
+  return labelsOnPipe.map(l => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#0f172a;border:1px solid #334155;border-radius:4px;padding:3px 6px;margin-bottom:3px;font-size:10.5px;">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:6px;" title="${escapeHtml(l.text)}">🏷️ ${escapeHtml(l.text)}</span>
+      <div style="display:flex;gap:2px;">
+        <button class="prop-quick-btn" style="padding:1px 5px;font-size:9.5px;" onclick="openEditManualLabelModal('${l.id}')">✏️</button>
+        <button class="prop-quick-btn" style="padding:1px 5px;font-size:9.5px;color:#f87171;" onclick="deleteManualLabel('${l.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  ACCESSORY PLACEMENT
 // ═══════════════════════════════════════════════════════════════════
 function placeAccessory(latlng) {
@@ -2963,7 +3404,7 @@ function placeAccessory(latlng) {
 // ═══════════════════════════════════════════════════════════════════
 //  CLICK & SELECT HANDLERS
 // ═══════════════════════════════════════════════════════════════════
-function onPipeClick(id) {
+function onPipeClick(id, clickLatLng) {
   if (currentMode === 'delete') {
     deletePipe(id);
     return;
@@ -2971,15 +3412,20 @@ function onPipeClick(id) {
   const pobj = pipes.find(p => p.id === id);
   if (!pobj) return;
 
+  if (currentMode === 'label') {
+    openNewManualLabelModal(clickLatLng || getMidpoint(pobj.points), pobj);
+    return;
+  }
+
   selectedPipeObj = pobj;
   showProperties('pipe', pobj.props);
   showVertexHandles(pobj);
   switchSidebarTab('prop');
 
-  const mid = getMidpoint(pobj.points);
+  const popupPos = clickLatLng || getMidpoint(pobj.points);
   L.popup()
-    .setLatLng(mid)
-    .setContent(makePipePopup(pobj.props))
+    .setLatLng(popupPos)
+    .setContent(makePipePopup(pobj.props, popupPos))
     .openOn(map);
 }
 
@@ -3053,9 +3499,11 @@ function makePipeTooltip(p) {
   return `[${p.material}${styleText}] ${p.name} | ⌀ ${p.inch} (${p.diameter} mm) | ${p.length.toFixed(1)} m`;
 }
 
-function makePipePopup(p) {
+function makePipePopup(p, atLatLng) {
   const styleLabel = p.lineStyle === 'dot' ? '•• Dot (Titik)' : (p.lineStyle === 'dash' ? '-- Putus (Dash)' : '── Solid');
   const weightVal = p.weight || (getSelectedDiameterByProps(p)?.weight || 6);
+  const latVal = atLatLng && atLatLng.lat ? atLatLng.lat : null;
+  const lngVal = atLatLng && atLatLng.lng ? atLatLng.lng : null;
   return `
     <div class="popup-title">💧 ${p.name}</div>
     <div class="popup-row"><span class="popup-key">Material:</span><span class="popup-val" style="color:${p.material==='HDPE'?'#facc15':'#38bdf8'}">${p.material}</span></div>
@@ -3065,9 +3513,10 @@ function makePipePopup(p) {
     <div class="popup-row"><span class="popup-key">Tekanan:</span><span class="popup-val">${p.pressure || '-'} bar</span></div>
     <div class="popup-row"><span class="popup-key">Tahun Pasang:</span><span class="popup-val">${p.year}</span></div>
     ${p.notes ? `<div style="margin-top:6px;font-size:11px;color:#94a3b8;">${p.notes}</div>` : ''}
-    <div class="popup-actions">
-      <button class="popup-btn edit-btn" onclick="openPipeModal('${p.id}')">✏️ Edit</button>
-      <button class="popup-btn del-btn" onclick="deletePipe('${p.id}');map.closePopup();">🗑 Hapus</button>
+    <div class="popup-actions" style="display:flex;gap:4px;margin-top:8px;">
+      <button class="popup-btn edit-btn" style="flex:1;" onclick="openPipeModal('${p.id}')">✏️ Edit</button>
+      <button class="popup-btn" style="flex:1.2;background:#8b5cf6;color:#ffffff;border:none;border-radius:4px;padding:4px 6px;cursor:pointer;font-size:11px;font-weight:bold;" onclick="triggerAddLabelOnPipe('${p.id}', ${latVal}, ${lngVal})">🏷️ +Label</button>
+      <button class="popup-btn del-btn" style="flex:1;" onclick="deletePipe('${p.id}');map.closePopup();">🗑 Hapus</button>
     </div>`;
 }
 
@@ -3150,6 +3599,17 @@ function showProperties(type, props) {
             <button class="prop-quick-btn" onclick="openCalloutModal('${props.id}')" title="Edit teks deskripsi notasi">✏️ Edit Notasi</button>
             <button class="prop-quick-btn" onclick="resetPipeCalloutQuick('${props.id}')" title="Kembalikan teks ke format standar otomatis">↺ Teks Auto</button>
             ${props.labelPos ? `<button class="prop-quick-btn" onclick="resetPipeCalloutPosQuick('${props.id}')" title="Kembalikan posisi panah ke atas garis pipa">🎯 Reset Panah</button>` : ''}
+          </div>
+        </div>
+
+        <!-- Daftar Label Manual Pada Pipa Ini -->
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid #334155;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:10.5px;font-weight:700;color:#94a3b8;">🏷️ Label Tambahan di Pipa:</span>
+            <button class="prop-quick-btn" style="flex:none;padding:2px 8px;font-size:10px;background:#8b5cf6;color:#ffffff;" onclick="triggerAddLabelOnPipe('${props.id}', null, null)">➕ Tambah</button>
+          </div>
+          <div id="prop-pipe-labels-list">
+            ${renderPipeManualLabelsList(props.id)}
           </div>
         </div>
 
@@ -3346,6 +3806,8 @@ function deletePipe(id) {
   saveStateForUndo('Hapus Pipa');
   map.removeLayer(pipes[idx].polyline);
   pipes.splice(idx, 1);
+  manualLabels = manualLabels.filter(l => l.pipeId !== id);
+  renderManualLabels();
   clearVertexHandles();
   updatePipeCallouts();
   updateStats();
@@ -3370,8 +3832,14 @@ function clearAll() {
   pipes.forEach(p => map.removeLayer(p.polyline));
   accessories.forEach(a => map.removeLayer(a.marker));
   pipes = []; accessories = [];
+  manualLabelMarkers.forEach(m => map.removeLayer(m));
+  manualLabelMarkers = [];
+  manualLabelLeaderLines.forEach(l => map.removeLayer(l));
+  manualLabelLeaderLines = [];
+  manualLabels = [];
   clearVertexHandles();
   updatePipeCallouts();
+  renderManualLabels();
   updateStats();
   showEmptyProperties();
   showToast('🗑 Seluruh jaringan telah dibersihkan', 'warning', 3000);
@@ -3594,6 +4062,7 @@ function enterLayoutMode() {
   // Make sure pipe labels are enabled and visible
   showPipeLabels = true;
   updatePipeCallouts();
+  renderManualLabels();
   buildKopLegend();
   renderKopView();
 
@@ -3943,6 +4412,24 @@ function exportGeoJSON() {
     });
   });
 
+  manualLabels.forEach(l => {
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [l.anchor.lng, l.anchor.lat] },
+      properties: {
+        id: l.id,
+        pipeId: l.pipeId,
+        text: l.text,
+        anchor: [l.anchor.lat, l.anchor.lng],
+        pos: [l.pos.lat, l.pos.lng],
+        style: l.style,
+        size: l.size,
+        color: l.color,
+        elementType: 'manualLabel'
+      }
+    });
+  });
+
   const geojson = { type: 'FeatureCollection', features, kopData };
   const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
@@ -4008,11 +4495,25 @@ function loadGeoJSON(geojson) {
       marker.on('click', (ev) => { L.DomEvent.stopPropagation(ev); onAccClick(p.id); });
       marker.on('dragend', () => updateStats());
       accessories.push({ id: p.id || ('acc_' + nextId++), marker, props: { ...p } });
+    } else if (p.elementType === 'manualLabel') {
+      const anchorLatLng = p.anchor ? L.latLng(p.anchor[0], p.anchor[1]) : L.latLng(f.geometry.coordinates[1], f.geometry.coordinates[0]);
+      const posLatLng = p.pos ? L.latLng(p.pos[0], p.pos[1]) : anchorLatLng;
+      manualLabels.push({
+        id: p.id || ('mlabel_' + (nextId++)),
+        pipeId: p.pipeId,
+        text: p.text,
+        anchor: anchorLatLng,
+        pos: posLatLng,
+        style: p.style || 'white',
+        size: p.size || 'medium',
+        color: p.color || '#38bdf8'
+      });
     }
   });
 
   updateStats();
   updatePipeCallouts();
+  renderManualLabels();
   fitNetworkInView();
 }
 
@@ -4066,6 +4567,16 @@ function captureState() {
       id: a.id,
       latlng: { lat: a.marker.getLatLng().lat, lng: a.marker.getLatLng().lng },
       props: JSON.parse(JSON.stringify(a.props))
+    })),
+    manualLabels: manualLabels.map(l => ({
+      id: l.id,
+      pipeId: l.pipeId,
+      text: l.text,
+      anchor: { lat: l.anchor.lat, lng: l.anchor.lng },
+      pos: { lat: l.pos.lat, lng: l.pos.lng },
+      style: l.style,
+      size: l.size,
+      color: l.color
     }))
   };
 }
@@ -4081,9 +4592,20 @@ function restoreState(state) {
   pipeLabelMarkers = [];
   pipeLeaderLines.forEach(l => map.removeLayer(l));
   pipeLeaderLines = [];
+
+  // Clear manual labels
+  manualLabelMarkers.forEach(m => map.removeLayer(m));
+  manualLabelMarkers = [];
+  manualLabelLeaderLines.forEach(l => map.removeLayer(l));
+  manualLabelLeaderLines = [];
   
   pipes = [];
   accessories = [];
+  manualLabels = (state.manualLabels || []).map(l => ({
+    ...l,
+    anchor: L.latLng(l.anchor.lat, l.anchor.lng),
+    pos: L.latLng(l.pos.lat, l.pos.lng)
+  }));
   
   // Restore pipes
   state.pipes.forEach(sp => {
@@ -4108,6 +4630,7 @@ function restoreState(state) {
   
   updateStats();
   updatePipeCallouts();
+  renderManualLabels();
   showEmptyProperties();
 }
 
@@ -4182,6 +4705,24 @@ function performAutoSave() {
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] },
         properties: { ...a.props, elementType: 'accessory' }
+      });
+    });
+    
+    manualLabels.forEach(l => {
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [l.anchor.lng, l.anchor.lat] },
+        properties: {
+          id: l.id,
+          pipeId: l.pipeId,
+          text: l.text,
+          anchor: [l.anchor.lat, l.anchor.lng],
+          pos: [l.pos.lat, l.pos.lng],
+          style: l.style,
+          size: l.size,
+          color: l.color,
+          elementType: 'manualLabel'
+        }
       });
     });
     
@@ -4489,6 +5030,7 @@ document.addEventListener('keydown', (e) => {
     case 's': setMode('select'); break;
     case 'p': setMode('pipe'); break;
     case 'a': setMode('accessory'); break;
+    case 'l': setMode('label'); break;
     case 'd': setMode('delete'); break;
     case 'm': setMode('measure'); break;
     case 'b': toggleSidebar(); break;

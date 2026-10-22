@@ -38,10 +38,14 @@ Aplikasi web interaktif untuk pemetaan, perencanaan teknis (Pertek), dan penggam
    - Clamp Saddle (Sambungan Rumah)
    - Washout / Penguras Endapan Pipa
 
-5. **Notasi Keterangan Jalur Pipa dengan Tanda Panah (*Leader Callout*):**
-   - Tanda panah penunjuk (*leader arrow*) langsung mengarah ke garis pipa.
+5. **Notasi Keterangan Jalur Pipa (*Leader Callout*) & Label Manual:**
+   - **Mode Label Manual (Shortcut `L`):** Pengguna dapat mengeklik titik mana saja pada garis pipa untuk memasang label keterangan/notasi teknis baru secara manual.
+   - **Pilihan Cepat / Preset Rekayasa:** Menyediakan template sekali-klik untuk keterangan teknis lapangan (Spesifikasi Pipa, *Crossing* Jalan Aspal, *Crossing* Saluran Air/Gorong-gorong, Jembatan Pipa, Patok STA, Kedalaman Galian H, dan Titik Koneksi Eksisting).
+   - **Gaya Tampilan Kotak Fleksibel:** Pilihan warna tema (Putih Standar PU, Kuning *Engineering*, Biru PDAM TRS, Gelap) serta ukuran huruf (Kecil, Standar, Besar).
+   - Tanda panah penunjuk (*leader arrow*) langsung mengarah ke titik pipa yang ditunjuk.
    - Kotak notasi dapat digeser (*drag*) agar tidak menutupi objek lain di peta, dengan garis petunjuk yang dinamis.
-   - Teks notasi dapat diedit secara manual atau dikembalikan ke format otomatis standar.
+   - Pengeditan teks instan (klik ✏️ atau klik ganda) dan penghapusan mudah (🗑).
+   - Terintegrasi penuh dengan panel properti pipa, sistem Undo/Redo, penyimpanan GeoJSON, dan cetak Gambar Kerja.
 
 6. **Smart Snapping & Vertex Editing:**
    - Kursor otomatis menempel (*snap*) pada ujung pipa, percabangan, dan aksesoris.
