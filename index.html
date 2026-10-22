@@ -966,13 +966,6 @@
     }
     .ur-btn.has-items { color: #f1f5f9; }
 
-    /* ─── Mini-Map ─────────────────────────────────────────── */
-    .leaflet-control-minimap {
-      border: 2px solid #334155 !important;
-      border-radius: 6px !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
-    }
-
     /* ─── Light Mode ───────────────────────────────────────── */
     body.light-mode {
       background: #f0f4f8; color: #1e293b;
@@ -4417,69 +4410,6 @@ function updateHeaderBadges() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  MINI-MAP CONTROL (Lightweight)
-// ═══════════════════════════════════════════════════════════════════
-function initMiniMap() {
-  // Create mini-map using Leaflet's built-in approach with a custom control
-  const MiniMapControl = L.Control.extend({
-    options: { position: 'bottomright' },
-    
-    onAdd: function(map) {
-      const container = L.DomUtil.create('div', 'leaflet-control-minimap');
-      container.style.cssText = 'width:150px;height:120px;background:#0f172a;overflow:hidden;cursor:pointer;';
-      
-      L.DomEvent.disableClickPropagation(container);
-      L.DomEvent.disableScrollPropagation(container);
-      
-      // Create mini map inside the container
-      setTimeout(() => {
-        const miniMap = L.map(container, {
-          zoomControl: false,
-          attributionControl: false,
-          dragging: false,
-          scrollWheelZoom: false,
-          doubleClickZoom: false,
-          touchZoom: false,
-          boxZoom: false,
-          keyboard: false
-        }).setView(map.getCenter(), Math.max(map.getZoom() - 5, 3));
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18, subdomains: ['a', 'b', 'c']
-        }).addTo(miniMap);
-        
-        // Viewport rectangle on mini-map
-        const bounds = map.getBounds();
-        const rect = L.rectangle(bounds, {
-          color: '#38bdf8', weight: 2, fillColor: '#38bdf8', fillOpacity: 0.15,
-          interactive: false
-        }).addTo(miniMap);
-        
-        // Sync on move
-        map.on('moveend zoomend', () => {
-          const center = map.getCenter();
-          miniMap.setView(center, Math.max(map.getZoom() - 5, 3), { animate: false });
-          rect.setBounds(map.getBounds());
-        });
-        
-        // Click mini-map to navigate
-        container.addEventListener('click', (e) => {
-          const containerRect = container.getBoundingClientRect();
-          const x = e.clientX - containerRect.left;
-          const y = e.clientY - containerRect.top;
-          const point = miniMap.containerPointToLatLng([x, y]);
-          map.flyTo(point, map.getZoom(), { duration: 0.5 });
-        });
-      }, 500);
-      
-      return container;
-    }
-  });
-  
-  new MiniMapControl().addTo(map);
-}
-
-// ═══════════════════════════════════════════════════════════════════
 //  KEYBOARD SHORTCUTS (Enhanced)
 // ═══════════════════════════════════════════════════════════════════
 document.addEventListener('keydown', (e) => {
@@ -4571,7 +4501,6 @@ document.addEventListener('keydown', (e) => {
 loadSavedTheme();
 loadSearchHistory();
 initMap();
-initMiniMap();
 buildDiameterUI();
 buildAccessoryUI();
 updateStats();

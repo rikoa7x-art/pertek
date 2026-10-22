@@ -68,7 +68,6 @@ Aplikasi web interaktif untuk pemetaan, perencanaan teknis (Pertek), dan penggam
     - **Sistem Undo / Redo Global (Ctrl+Z / Ctrl+Y):** Membatalkan dan mengulang aksi penggambaran pipa, pemasangan fitting, pengeditan, atau penghapusan elemen.
     - **Panel Panduan Keyboard Shortcut (? / F1):** Bantuan interaktif ringkas seluruh pintasan keyboard langsung di layar.
     - **Sistem Notifikasi Toast Elegan:** Pengganti pop-up alert yang halus dan tidak memblokir interaksi pengguna.
-    - **Mini-Map (Peta Inset Navigasi):** Peta kecil di pojok kanan bawah untuk navigasi cepat dan orientasi area.
     - **Bilah Sisi Responsif (Collapsible Sidebar):** Sidebar dapat disembunyikan/ditampilkan dengan tombol toggle atau shortcut `B`.
     - **Mode Tampilan Gelap & Terang (Dark / Light Mode):** Pilihan tema dengan penyimpanan preferensi otomatis.
     - **Salin Koordinat (1-Click Copy Lat, Lng):** Tombol cepat untuk menyalin koordinat kursor ke clipboard.
