@@ -803,9 +803,363 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0b1120; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+    /* ─── Toast Notification System ────────────────────────── */
+    #toast-container {
+      position: fixed; top: 58px; right: 16px;
+      z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none; max-width: 380px;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      color: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      animation: toastSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .toast.toast-exit {
+      animation: toastSlideOut 0.3s ease forwards;
+    }
+    .toast.success { background: rgba(16, 185, 129, 0.92); }
+    .toast.error   { background: rgba(239, 68, 68, 0.92); }
+    .toast.info    { background: rgba(2, 132, 199, 0.92); }
+    .toast.warning { background: rgba(245, 158, 11, 0.92); color: #0f172a; }
+    .toast .toast-icon { font-size: 18px; flex-shrink: 0; }
+    .toast .toast-msg  { flex: 1; line-height: 1.4; }
+    .toast .toast-close {
+      background: none; border: none; color: inherit; opacity: 0.7;
+      font-size: 16px; cursor: pointer; padding: 0 2px;
+      transition: opacity 0.15s;
+    }
+    .toast .toast-close:hover { opacity: 1; }
+    @keyframes toastSlideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes toastSlideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+
+    /* ─── Auto-Save Indicator ──────────────────────────────── */
+    .autosave-indicator {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: #64748b;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .autosave-indicator.saving { color: #fbbf24; }
+    .autosave-indicator.saved  { color: #34d399; }
+    .autosave-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #334155; transition: background 0.3s;
+    }
+    .autosave-indicator.saving .autosave-dot { background: #fbbf24; animation: pulse 1s infinite; }
+    .autosave-indicator.saved  .autosave-dot { background: #34d399; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ─── Sidebar Collapse ─────────────────────────────────── */
+    #sidebar {
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                  margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.2s ease;
+    }
+    #sidebar.collapsed {
+      width: 0; overflow: hidden; opacity: 0;
+      border-right: none;
+    }
+    .sidebar-toggle {
+      position: absolute; top: 50%; left: 0;
+      transform: translateY(-50%);
+      z-index: 700; 
+      width: 24px; height: 52px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #334155;
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      color: #94a3b8; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+      transition: all 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .sidebar-toggle:hover {
+      background: #1e293b; color: #38bdf8; border-color: #38bdf8;
+      width: 28px;
+    }
+    body.sidebar-open .sidebar-toggle { left: 320px; }
+    body.sidebar-open.in-layout-mode .sidebar-toggle { display: none; }
+
+    /* ─── Keyboard Help Overlay ────────────────────────────── */
+    .help-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 9500;
+      display: none; align-items: center; justify-content: center;
+    }
+    .help-overlay.open { display: flex; }
+    .help-panel {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 28px 32px;
+      width: 560px; max-width: 95vw; max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+    }
+    .help-panel h2 {
+      color: #38bdf8; font-size: 20px; margin-bottom: 4px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .help-panel .help-subtitle {
+      color: #64748b; font-size: 12px; margin-bottom: 18px;
+    }
+    .help-section-title {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.5px; color: #7dd3fc; margin: 16px 0 8px;
+      padding-bottom: 4px; border-bottom: 1px solid #1e293b;
+    }
+    .shortcut-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; font-size: 13px; color: #cbd5e1;
+    }
+    .shortcut-row:not(:last-child) { border-bottom: 1px solid #1e293b44; }
+    .shortcut-keys {
+      display: flex; gap: 4px;
+    }
+    .kbd {
+      background: #1e293b; border: 1px solid #475569;
+      border-radius: 5px; padding: 3px 9px;
+      font-size: 11px; font-weight: 700; color: #f1f5f9;
+      font-family: 'Consolas', 'SF Mono', monospace;
+      box-shadow: 0 2px 0 #0f172a;
+      min-width: 28px; text-align: center;
+    }
+    .help-close-hint {
+      text-align: center; margin-top: 16px;
+      font-size: 11px; color: #475569;
+    }
+
+    /* ─── Undo/Redo Buttons in Header ──────────────────────── */
+    .undo-redo-group {
+      display: flex; gap: 2px; margin-right: 4px;
+    }
+    .ur-btn {
+      width: 32px; height: 32px;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 6px; color: #64748b;
+      cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .ur-btn:hover:not(:disabled) {
+      background: #334155; color: #f1f5f9; border-color: #38bdf8;
+    }
+    .ur-btn:disabled {
+      opacity: 0.3; cursor: not-allowed;
+    }
+    .ur-btn.has-items { color: #f1f5f9; }
+
+    /* ─── Mini-Map ─────────────────────────────────────────── */
+    .leaflet-control-minimap {
+      border: 2px solid #334155 !important;
+      border-radius: 6px !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+    }
+
+    /* ─── Light Mode ───────────────────────────────────────── */
+    body.light-mode {
+      background: #f0f4f8; color: #1e293b;
+    }
+    body.light-mode #header {
+      background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+      border-bottom-color: #60a5fa;
+    }
+    body.light-mode #header .logo { color: #0369a1; }
+    body.light-mode #header .subtitle { color: #64748b; }
+    body.light-mode .search-box {
+      background: #ffffff; border-color: #cbd5e1;
+    }
+    body.light-mode .search-box input { color: #0f172a; }
+    body.light-mode .search-box input::placeholder { color: #94a3b8; }
+    body.light-mode #sidebar {
+      background: #f8fafc; border-right-color: #e2e8f0;
+    }
+    body.light-mode #mode-buttons,
+    body.light-mode .sidebar-tabs {
+      background: #f1f5f9; border-bottom-color: #e2e8f0;
+    }
+    body.light-mode .mode-btn {
+      background: #e2e8f0; color: #475569; border-color: #cbd5e1;
+    }
+    body.light-mode .mode-btn:hover {
+      background: #dbeafe; color: #0f172a; border-color: #60a5fa;
+    }
+    body.light-mode .mode-btn.active {
+      background: #0284c7; color: #fff; border-color: #0369a1;
+    }
+    body.light-mode .sb-tab { color: #64748b; }
+    body.light-mode .sb-tab.active { color: #0284c7; border-bottom-color: #0284c7; background: #f8fafc; }
+    body.light-mode .panel-header { background: #f1f5f9; border-bottom-color: #e2e8f0; color: #0369a1; }
+    body.light-mode .material-toggle { background: #f1f5f9; border-bottom-color: #e2e8f0; }
+    body.light-mode .mat-tab-btn { background: #e2e8f0; border-color: #cbd5e1; color: #475569; }
+    body.light-mode .diam-item { background: #e2e8f0; }
+    body.light-mode .diam-item:hover { background: #dbeafe; }
+    body.light-mode .diam-item.selected { background: #dbeafe; border-color: #60a5fa; }
+    body.light-mode .diam-label { color: #0f172a; }
+    body.light-mode .pipe-style-card { background: #e2e8f0; border-color: #cbd5e1; }
+    body.light-mode .pipe-style-title span { color: #0f172a; }
+    body.light-mode .line-style-btn { background: #f8fafc; border-color: #cbd5e1; color: #475569; }
+    body.light-mode .line-style-btn.active { background: #dbeafe; border-color: #60a5fa; color: #0369a1; }
+    body.light-mode .acc-btn { background: #e2e8f0; border-color: #cbd5e1; color: #334155; }
+    body.light-mode .acc-btn:hover { background: #dbeafe; border-color: #60a5fa; }
+    body.light-mode .prop-card { background: #e2e8f0; border-color: #cbd5e1; }
+    body.light-mode .prop-row { border-bottom-color: #cbd5e1; }
+    body.light-mode .prop-key { color: #64748b; }
+    body.light-mode .prop-val { color: #0f172a; }
+    body.light-mode .help-hint { background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); color: #2563eb; }
+    body.light-mode #statusbar { background: rgba(248, 250, 252, 0.95); border-top-color: #e2e8f0; color: #475569; }
+    body.light-mode #statusbar .stat-val { color: #0f172a; }
+    body.light-mode #legend { background: rgba(248, 250, 252, 0.96); border-color: #cbd5e1; }
+    body.light-mode .legend-header h4 { color: #0369a1; }
+    body.light-mode .floating-toolbar { background: rgba(248, 250, 252, 0.96); border-color: #60a5fa; }
+    body.light-mode .draw-info { color: #0f172a; }
+    body.light-mode .modal-box { background: #f8fafc; border-color: #cbd5e1; }
+    body.light-mode .modal-box h3 { color: #0369a1; }
+    body.light-mode .modal-box label { color: #475569; }
+    body.light-mode .modal-box input,
+    body.light-mode .modal-box select,
+    body.light-mode .modal-box textarea {
+      background: #ffffff; border-color: #cbd5e1; color: #0f172a;
+    }
+    body.light-mode .ur-btn { background: #e2e8f0; border-color: #cbd5e1; color: #94a3b8; }
+    body.light-mode .ur-btn:hover:not(:disabled) { background: #dbeafe; color: #0f172a; border-color: #60a5fa; }
+    body.light-mode .sidebar-toggle { background: rgba(248, 250, 252, 0.95); border-color: #cbd5e1; color: #64748b; }
+    body.light-mode .sidebar-toggle:hover { color: #0369a1; border-color: #60a5fa; }
+    body.light-mode ::-webkit-scrollbar-track { background: #f1f5f9; }
+    body.light-mode ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+    /* ─── Theme Toggle Button ──────────────────────────────── */
+    .theme-toggle {
+      width: 34px; height: 34px;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 8px; color: #fbbf24;
+      cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { background: #334155; border-color: #fbbf24; transform: rotate(20deg); }
+    body.light-mode .theme-toggle { background: #e2e8f0; border-color: #cbd5e1; color: #6366f1; }
+    body.light-mode .theme-toggle:hover { background: #dbeafe; border-color: #6366f1; }
+
+    /* ─── Enhanced Crosshair ───────────────────────────────── */
+    .draw-cursor .leaflet-container {
+      cursor: crosshair !important;
+    }
+    .coord-copy-btn {
+      background: #0f172a; border: 1px solid #334155; color: #94a3b8;
+      padding: 2px 6px; border-radius: 3px; cursor: pointer;
+      font-size: 10px; margin-left: 8px; transition: all 0.15s;
+    }
+    .coord-copy-btn:hover { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
+
+    /* ─── Stats Badges in Header ───────────────────────────── */
+    .header-stat-badges {
+      display: flex; gap: 6px; align-items: center; margin-right: 6px;
+    }
+    .hdr-badge {
+      display: flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 12px;
+      font-size: 10px; font-weight: 700;
+      background: #1e293b; border: 1px solid #334155;
+      color: #94a3b8; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .hdr-badge .badge-count {
+      background: #334155; color: #f1f5f9;
+      padding: 1px 6px; border-radius: 8px;
+      font-size: 10px; font-weight: 800;
+      min-width: 20px; text-align: center;
+      transition: all 0.3s;
+    }
+    .hdr-badge .badge-count.has-items { background: #0284c7; }
+    body.light-mode .hdr-badge { background: #e2e8f0; border-color: #cbd5e1; }
+    body.light-mode .hdr-badge .badge-count { background: #cbd5e1; color: #0f172a; }
+    body.light-mode .hdr-badge .badge-count.has-items { background: #3b82f6; color: #fff; }
+
+    /* ─── Search Improvements ──────────────────────────────── */
+    .search-results-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: #0f172a; border: 1px solid #334155;
+      border-top: none; border-radius: 0 0 8px 8px;
+      max-height: 200px; overflow-y: auto;
+      z-index: 1100; display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .search-results-dropdown.open { display: block; }
+    .search-result-item {
+      padding: 8px 12px; font-size: 12px; color: #cbd5e1;
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: background 0.1s;
+    }
+    .search-result-item:hover { background: #1e293b; color: #f1f5f9; }
+    .search-result-item .sri-icon { font-size: 14px; }
+    .search-box { position: relative; }
+    body.light-mode .search-results-dropdown { background: #ffffff; border-color: #e2e8f0; }
+    body.light-mode .search-result-item { color: #334155; }
+    body.light-mode .search-result-item:hover { background: #f1f5f9; color: #0f172a; }
+
+    /* ─── Transition Utilities ─────────────────────────────── */
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
-<body>
+<body class="sidebar-open">
+
+<!-- ═══ Toast Notification Container ═══ -->
+<div id="toast-container"></div>
+
+<!-- ═══ Keyboard Help Overlay ═══ -->
+<div class="help-overlay" id="help-overlay" onclick="if(event.target===this)closeHelpOverlay()">
+  <div class="help-panel">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <h2>⌨️ Panduan Keyboard Shortcut</h2>
+        <div class="help-subtitle">Tekan <span class="kbd">?</span> atau <span class="kbd">F1</span> untuk menampilkan / menutup</div>
+      </div>
+      <button onclick="closeHelpOverlay()" style="background:none;border:none;color:#64748b;font-size:24px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    
+    <div class="help-section-title">Mode Gambar</div>
+    <div class="shortcut-row"><span>Pilih / Edit</span><div class="shortcut-keys"><span class="kbd">S</span></div></div>
+    <div class="shortcut-row"><span>Gambar Pipa</span><div class="shortcut-keys"><span class="kbd">P</span></div></div>
+    <div class="shortcut-row"><span>Pasang Aksesori</span><div class="shortcut-keys"><span class="kbd">A</span></div></div>
+    <div class="shortcut-row"><span>Mode Hapus</span><div class="shortcut-keys"><span class="kbd">D</span></div></div>
+    <div class="shortcut-row"><span>Ukur Jarak</span><div class="shortcut-keys"><span class="kbd">M</span></div></div>
+
+    <div class="help-section-title">Saat Menggambar Pipa</div>
+    <div class="shortcut-row"><span>Selesaikan pipa</span><div class="shortcut-keys"><span class="kbd">Enter</span> / <span class="kbd">Klik Kanan</span></div></div>
+    <div class="shortcut-row"><span>Undo titik terakhir</span><div class="shortcut-keys"><span class="kbd">Backspace</span> / <span class="kbd">Ctrl</span>+<span class="kbd">Z</span></div></div>
+    <div class="shortcut-row"><span>Batalkan gambar</span><div class="shortcut-keys"><span class="kbd">Esc</span></div></div>
+
+    <div class="help-section-title">Umum</div>
+    <div class="shortcut-row"><span>Undo aksi</span><div class="shortcut-keys"><span class="kbd">Ctrl</span>+<span class="kbd">Z</span></div></div>
+    <div class="shortcut-row"><span>Redo aksi</span><div class="shortcut-keys"><span class="kbd">Ctrl</span>+<span class="kbd">Y</span></div></div>
+    <div class="shortcut-row"><span>Toggle sidebar</span><div class="shortcut-keys"><span class="kbd">B</span></div></div>
+    <div class="shortcut-row"><span>Simpan proyek</span><div class="shortcut-keys"><span class="kbd">Ctrl</span>+<span class="kbd">S</span></div></div>
+    <div class="shortcut-row"><span>Buka proyek</span><div class="shortcut-keys"><span class="kbd">Ctrl</span>+<span class="kbd">O</span></div></div>
+    <div class="shortcut-row"><span>Bantuan shortcut</span><div class="shortcut-keys"><span class="kbd">?</span> / <span class="kbd">F1</span></div></div>
+    <div class="shortcut-row"><span>Keluar mode / tutup</span><div class="shortcut-keys"><span class="kbd">Esc</span></div></div>
+
+    <div class="help-close-hint">Tekan <span class="kbd">Esc</span> atau <span class="kbd">?</span> untuk menutup</div>
+  </div>
+</div>
 
 <!-- ═══════════════ HEADER ═══════════════ -->
 <div id="header">
@@ -816,11 +1170,44 @@
   </div>
 
   <div class="search-box">
-    <input type="text" id="search-input" placeholder="Cari kota, jalan, koordinat..." onkeydown="if(event.key==='Enter') searchLocation()" />
+    <input type="text" id="search-input" placeholder="Cari kota, jalan, koordinat..." 
+           onkeydown="if(event.key==='Enter') searchLocation()" 
+           oninput="onSearchInput(this.value)" 
+           onfocus="showSearchHistory()" 
+           onblur="setTimeout(()=>hideSearchDropdown(),200)" />
     <button onclick="searchLocation()">🔍 Cari</button>
+    <div class="search-results-dropdown" id="search-dropdown"></div>
+  </div>
+
+  <!-- Auto-Save Indicator -->
+  <div class="autosave-indicator" id="autosave-indicator" title="Status penyimpanan otomatis">
+    <span class="autosave-dot"></span>
+    <span id="autosave-text">Siap</span>
   </div>
 
   <div class="spacer"></div>
+
+  <!-- Stats Badges -->
+  <div class="header-stat-badges">
+    <div class="hdr-badge" title="Jumlah segmen pipa">
+      〰 Pipa <span class="badge-count" id="badge-pipes">0</span>
+    </div>
+    <div class="hdr-badge" title="Jumlah aksesori terpasang">
+      ⚙ Akses. <span class="badge-count" id="badge-acc">0</span>
+    </div>
+    <div class="hdr-badge" title="Total panjang jaringan">
+      📏 <span class="badge-count" id="badge-length" style="min-width:40px;">0 m</span>
+    </div>
+  </div>
+
+  <!-- Undo/Redo -->
+  <div class="undo-redo-group">
+    <button class="ur-btn" id="btn-undo" onclick="undoAction()" disabled title="Undo (Ctrl+Z)">↶</button>
+    <button class="ur-btn" id="btn-redo" onclick="redoAction()" disabled title="Redo (Ctrl+Y)">↷</button>
+  </div>
+
+  <!-- Theme Toggle -->
+  <button class="theme-toggle" id="btn-theme" onclick="toggleTheme()" title="Toggle Mode Gelap/Terang">🌙</button>
 
   <!-- Project Actions in Topbar -->
   <div class="header-actions">
@@ -839,11 +1226,19 @@
     <button class="hdr-btn danger" onclick="clearAll()" title="Bersihkan Seluruh Jaringan">
       🗑 Bersihkan
     </button>
+    <button class="hdr-btn" style="background:#475569;color:#fff;" onclick="openHelpOverlay()" title="Bantuan Keyboard Shortcut (?)">
+      ❓
+    </button>
   </div>
 </div>
 
 <!-- ═══════════════ MAIN ════════════════ -->
 <div id="main">
+
+  <!-- Sidebar Toggle Button -->
+  <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar (B)">
+    ◀
+  </button>
 
   <!-- ══ SIDEBAR (Editor Mode) ══ -->
   <div id="sidebar">
@@ -1057,7 +1452,9 @@
       <div class="stat">PVC: <span class="stat-val" id="st-pvc-len">0</span> m</div>
       <div class="stat">HDPE: <span class="stat-val" id="st-hdpe-len">0</span> m</div>
       <div class="stat">Aksesori: <span class="stat-val" id="st-acc">0</span></div>
-      <div class="stat" id="st-coord" style="margin-left:auto;"></div>
+      <div class="stat" id="st-coord" style="margin-left:auto;">
+        <button class="coord-copy-btn" onclick="copyCoordinates()" title="Salin koordinat kursor">📋 Copy</button>
+      </div>
     </div>
   </div>
 
@@ -1263,6 +1660,9 @@
     </button>
     <button class="lt-btn info" onclick="fitNetworkInView()" title="Pusatkan Seluruh Pipa di Kertas">
       🎯 Pusatkan
+    </button>
+    <button class="lt-btn info" onclick="syncMapScaleToKop()" title="Perbarui Skala Kop sesuai zoom saat ini">
+      📏 Skala Auto
     </button>
     <button class="lt-btn info" onclick="togglePipeLabels()" id="btn-toggle-labels">
       🏷️ Label: ON
@@ -2192,8 +2592,9 @@ function onMapClick(e) {
 
 function onMapMouseMove(e) {
   const { lat, lng } = e.latlng;
-  document.getElementById('st-coord').textContent =
-    `Lat: ${lat.toFixed(6)} | Lng: ${lng.toFixed(6)}`;
+  lastMouseCoord = e.latlng;
+  document.getElementById('st-coord').innerHTML =
+    `Lat: ${lat.toFixed(6)} | Lng: ${lng.toFixed(6)} <button class="coord-copy-btn" onclick="copyCoordinates()" title="Salin koordinat kursor">📋 Copy</button>`;
 
   const snap = findSnapPoint(e.latlng);
   if (snap && (currentMode === 'pipe' || currentMode === 'accessory')) {
@@ -2275,6 +2676,9 @@ function finishPipe() {
     cancelDrawing();
     return;
   }
+  
+  saveStateForUndo('Gambar Pipa');
+  
   if (tempLine) { map.removeLayer(tempLine); tempLine = null; }
 
   const id = 'pipe_' + (nextId++);
@@ -2479,6 +2883,8 @@ function saveCalloutModal() {
   const pobj = pipes.find(p => p.id === editingCalloutPipeId);
   if (!pobj) return;
 
+  saveStateForUndo('Edit Notasi');
+
   const val = document.getElementById('cm-text').value.trim();
   pobj.props.customLabel = val;
 
@@ -2487,6 +2893,7 @@ function saveCalloutModal() {
     showProperties('pipe', pobj.props);
   }
   closeCalloutModal();
+  showToast('🏷 Notasi keterangan berhasil diperbarui', 'success', 2500);
 }
 
 function resetCalloutToAuto() {
@@ -2526,6 +2933,8 @@ function resetPipeCalloutPosQuick(pipeId) {
 //  ACCESSORY PLACEMENT
 // ═══════════════════════════════════════════════════════════════════
 function placeAccessory(latlng) {
+  saveStateForUndo('Pasang Aksesori');
+  
   const id = 'acc_' + (nextId++);
   const acc = selectedAcc;
   const props = {
@@ -2841,6 +3250,8 @@ function savePipeModal() {
   const pobj = pipes.find(p => p.id === editingPipeId);
   if (!pobj) return;
 
+  saveStateForUndo('Edit Pipa');
+
   const mat = document.getElementById('pm-material').value;
   const diamIdx = parseInt(document.getElementById('pm-diam').value) || 0;
   const catalog = PIPE_CATALOG[mat] || PIPE_CATALOG.PVC;
@@ -2876,6 +3287,7 @@ function savePipeModal() {
   updatePipeCallouts();
   updateStats();
   closePipeModal();
+  showToast('💧 Properti pipa berhasil disimpan', 'success', 2500);
 }
 
 function openAccModal(id) {
@@ -2911,6 +3323,8 @@ function saveAccModal() {
   const aobj = accessories.find(a => a.id === editingAccId);
   if (!aobj) return;
 
+  saveStateForUndo('Edit Aksesori');
+
   const typeId = document.getElementById('am-type').value;
   const acc = ACCESSORIES.find(a => a.id === typeId) || ACCESSORIES[0];
 
@@ -2927,6 +3341,7 @@ function saveAccModal() {
   showProperties('acc', aobj.props);
   updateStats();
   closeAccModal();
+  showToast('⚙ Properti aksesori berhasil disimpan', 'success', 2500);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2935,25 +3350,30 @@ function saveAccModal() {
 function deletePipe(id) {
   const idx = pipes.findIndex(p => p.id === id);
   if (idx === -1) return;
+  saveStateForUndo('Hapus Pipa');
   map.removeLayer(pipes[idx].polyline);
   pipes.splice(idx, 1);
   clearVertexHandles();
   updatePipeCallouts();
   updateStats();
   showEmptyProperties();
+  showToast('🗑 Pipa berhasil dihapus', 'info', 2000);
 }
 
 function deleteAcc(id) {
   const idx = accessories.findIndex(a => a.id === id);
   if (idx === -1) return;
+  saveStateForUndo('Hapus Aksesori');
   map.removeLayer(accessories[idx].marker);
   accessories.splice(idx, 1);
   updateStats();
   showEmptyProperties();
+  showToast('🗑 Aksesori berhasil dihapus', 'info', 2000);
 }
 
 function clearAll() {
   if (!confirm('Apakah Anda yakin ingin menghapus seluruh jaringan pipa dan aksesori?')) return;
+  saveStateForUndo('Bersihkan Semua');
   pipes.forEach(p => map.removeLayer(p.polyline));
   accessories.forEach(a => map.removeLayer(a.marker));
   pipes = []; accessories = [];
@@ -2961,6 +3381,7 @@ function clearAll() {
   updatePipeCallouts();
   updateStats();
   showEmptyProperties();
+  showToast('🗑 Seluruh jaringan telah dibersihkan', 'warning', 3000);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3153,6 +3574,7 @@ function exportBOQtoCSV() {
   a.download = `BOQ-Pertek-TRS-${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+  showToast('📊 File CSV BOQ berhasil diunduh', 'success', 3000);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3217,6 +3639,36 @@ function fitNetworkInView() {
   } else {
     map.setView([-6.2088, 106.8456], 14);
   }
+}
+
+function getCalculatedMapScale() {
+  if (!map) return '1 : 1.000';
+  const centerLat = map.getCenter().lat;
+  const zoom = map.getZoom();
+  const metersPerPixel = (156543.03392 * Math.cos(centerLat * Math.PI / 180)) / Math.pow(2, zoom);
+  const rawScale = metersPerPixel / 0.000264583;
+  
+  const standardScales = [50, 100, 200, 250, 500, 750, 1000, 1500, 2000, 2500, 5000, 7500, 10000, 15000, 20000, 25000, 50000];
+  let closest = standardScales[0];
+  let minDiff = Math.abs(rawScale - closest);
+  for (const s of standardScales) {
+    const diff = Math.abs(rawScale - s);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = s;
+    }
+  }
+  return `1 : ${closest.toLocaleString('id-ID')}`;
+}
+
+function syncMapScaleToKop() {
+  const calcScale = getCalculatedMapScale();
+  kopData.skala = calcScale;
+  renderKopView();
+  try {
+    localStorage.setItem('pipemap_kop_data', JSON.stringify(kopData));
+  } catch(e) {}
+  showToast(`📏 Skala Kop disinkronkan: ${calcScale}`, 'success', 2500);
 }
 
 function printDrawingSheet() {
@@ -3333,6 +3785,7 @@ function saveKopModal() {
 
   renderKopView();
   closeKopModal();
+  showToast('📐 Data Kop Gambar (Etiket) berhasil disimpan', 'success', 2500);
 }
 
 function buildKopLegend() {
@@ -3415,6 +3868,8 @@ function updateStats() {
 
   document.getElementById('st-pvc-len').textContent = pvcLen.toFixed(0);
   document.getElementById('st-hdpe-len').textContent = hdpeLen.toFixed(0);
+  
+  updateHeaderBadges();
 }
 
 function calcPolylineLength(pts) {
@@ -3443,26 +3898,32 @@ function searchLocation() {
   const q = document.getElementById('search-input').value.trim();
   if (!q) return;
 
+  hideSearchDropdown();
+  saveSearchHistory(q);
+
   const coordMatch = q.match(/^([-+]?\d+(\.\d+)?)[,\s]+([-+]?\d+(\.\d+)?)$/);
   if (coordMatch) {
     const lat = parseFloat(coordMatch[1]);
     const lng = parseFloat(coordMatch[3]);
     map.flyTo([lat, lng], 17, { duration: 1.2 });
+    showToast(`📍 Berpindah ke koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success', 2500);
     return;
   }
 
+  showToast('🔍 Mencari lokasi...', 'info', 1500);
   fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`)
     .then(r => r.json())
     .then(data => {
       if (data && data.length > 0) {
         const item = data[0];
         map.flyTo([parseFloat(item.lat), parseFloat(item.lon)], 16, { duration: 1.2 });
+        showToast(`📍 Lokasi ditemukan: ${item.display_name.split(',')[0]}`, 'success', 3000);
       } else {
-        alert(`Lokasi "${q}" tidak ditemukan. Coba masukkan nama jalan/kota atau koordinat.`);
+        showToast(`Lokasi "${q}" tidak ditemukan. Coba nama jalan/kota lain atau koordinat.`, 'warning', 4000);
       }
     })
     .catch(() => {
-      alert('Pencarian online terkendala. Anda dapat memasukkan koordinat lat, lng langsung (contoh: -6.2088, 106.8456).');
+      showToast('Pencarian online terkendala. Anda dapat memasukkan koordinat Lat, Lng langsung.', 'warning', 4000);
     });
 }
 
@@ -3497,6 +3958,7 @@ function exportGeoJSON() {
   a.download = `pertek-trs-${Date.now()}.geojson`;
   a.click();
   URL.revokeObjectURL(url);
+  showToast('💾 Berhasil mengunduh file proyek GeoJSON!', 'success', 3000);
 }
 
 function importGeoJSON() {
@@ -3506,13 +3968,15 @@ function importGeoJSON() {
 function handleFileImport(evt) {
   const file = evt.target.files[0];
   if (!file) return;
+  saveStateForUndo('Buka Proyek');
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
       const geojson = JSON.parse(e.target.result);
       loadGeoJSON(geojson);
+      showToast('✅ Berhasil memuat file proyek GeoJSON!', 'success', 3500);
     } catch (err) {
-      alert('File GeoJSON tidak valid: ' + err.message);
+      showToast('File GeoJSON tidak valid: ' + err.message, 'error', 4000);
     }
   };
   reader.readAsText(file);
@@ -3560,16 +4024,519 @@ function loadGeoJSON(geojson) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  KEYBOARD SHORTCUTS
+//  TOAST NOTIFICATION SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+function showToast(message, type = 'info', duration = 3500) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+    <span class="toast-msg">${message}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+  `;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('toast-exit');
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UNDO / REDO SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+const undoStack = [];
+const redoStack = [];
+const MAX_UNDO_SIZE = 50;
+
+function saveStateForUndo(actionLabel) {
+  const state = captureState();
+  state._actionLabel = actionLabel;
+  undoStack.push(state);
+  if (undoStack.length > MAX_UNDO_SIZE) undoStack.shift();
+  redoStack.length = 0; // clear redo on new action
+  updateUndoRedoButtons();
+}
+
+function captureState() {
+  return {
+    pipes: pipes.map(p => ({
+      id: p.id,
+      points: p.points.map(pt => ({ lat: pt.lat, lng: pt.lng })),
+      props: JSON.parse(JSON.stringify(p.props))
+    })),
+    accessories: accessories.map(a => ({
+      id: a.id,
+      latlng: { lat: a.marker.getLatLng().lat, lng: a.marker.getLatLng().lng },
+      props: JSON.parse(JSON.stringify(a.props))
+    }))
+  };
+}
+
+function restoreState(state) {
+  // Remove all current pipes & accessories from map
+  pipes.forEach(p => map.removeLayer(p.polyline));
+  accessories.forEach(a => map.removeLayer(a.marker));
+  clearVertexHandles();
+  
+  // Clear pipe label markers
+  pipeLabelMarkers.forEach(m => map.removeLayer(m));
+  pipeLabelMarkers = [];
+  pipeLeaderLines.forEach(l => map.removeLayer(l));
+  pipeLeaderLines = [];
+  
+  pipes = [];
+  accessories = [];
+  
+  // Restore pipes
+  state.pipes.forEach(sp => {
+    const pts = sp.points.map(pt => L.latLng(pt.lat, pt.lng));
+    const props = { ...sp.props, length: calcPolylineLength(pts) };
+    const poly = createPipePolyline(pts, props);
+    poly.addTo(map);
+    pipes.push({ id: sp.id, polyline: poly, props, points: pts });
+  });
+  
+  // Restore accessories
+  state.accessories.forEach(sa => {
+    const latlng = L.latLng(sa.latlng.lat, sa.latlng.lng);
+    const acc = ACCESSORIES.find(a => a.id === sa.props.type) || ACCESSORIES[0];
+    const icon = createAccIcon(acc);
+    const marker = L.marker(latlng, { icon, draggable: true }).addTo(map);
+    marker.bindTooltip(`[${acc.label}] ${sa.props.name}`, { className: 'custom-tooltip' });
+    marker.on('click', (ev) => { L.DomEvent.stopPropagation(ev); onAccClick(sa.id); });
+    marker.on('dragend', () => updateStats());
+    accessories.push({ id: sa.id, marker, props: { ...sa.props } });
+  });
+  
+  updateStats();
+  updatePipeCallouts();
+  showEmptyProperties();
+}
+
+function undoAction() {
+  if (undoStack.length === 0) return;
+  const currentState = captureState();
+  redoStack.push(currentState);
+  
+  const prevState = undoStack.pop();
+  restoreState(prevState);
+  updateUndoRedoButtons();
+  
+  showToast(`↶ Undo: ${prevState._actionLabel || 'aksi'}`, 'info', 2000);
+}
+
+function redoAction() {
+  if (redoStack.length === 0) return;
+  const currentState = captureState();
+  currentState._actionLabel = 'Redo';
+  undoStack.push(currentState);
+  
+  const nextState = redoStack.pop();
+  restoreState(nextState);
+  updateUndoRedoButtons();
+  
+  showToast('↷ Redo berhasil', 'info', 2000);
+}
+
+function updateUndoRedoButtons() {
+  const undoBtn = document.getElementById('btn-undo');
+  const redoBtn = document.getElementById('btn-redo');
+  undoBtn.disabled = undoStack.length === 0;
+  redoBtn.disabled = redoStack.length === 0;
+  undoBtn.classList.toggle('has-items', undoStack.length > 0);
+  redoBtn.classList.toggle('has-items', redoStack.length > 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  AUTO-SAVE SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+let autoSaveTimer = null;
+const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+const AUTOSAVE_KEY = 'pipemap_autosave';
+
+function startAutoSave() {
+  autoSaveTimer = setInterval(() => {
+    performAutoSave();
+  }, AUTOSAVE_INTERVAL);
+}
+
+function performAutoSave() {
+  if (pipes.length === 0 && accessories.length === 0) return;
+  
+  const indicator = document.getElementById('autosave-indicator');
+  const text = document.getElementById('autosave-text');
+  
+  indicator.className = 'autosave-indicator saving';
+  text.textContent = 'Menyimpan...';
+  
+  try {
+    const features = [];
+    pipes.forEach(p => {
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: p.points.map(pt => [pt.lng, pt.lat]) },
+        properties: { ...p.props, elementType: 'pipe' }
+      });
+    });
+    accessories.forEach(a => {
+      const latlng = a.marker.getLatLng();
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] },
+        properties: { ...a.props, elementType: 'accessory' }
+      });
+    });
+    
+    const saveData = {
+      type: 'FeatureCollection',
+      features,
+      kopData,
+      savedAt: new Date().toISOString(),
+      mapCenter: [map.getCenter().lat, map.getCenter().lng],
+      mapZoom: map.getZoom()
+    };
+    
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(saveData));
+    
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    
+    indicator.className = 'autosave-indicator saved';
+    text.textContent = `Tersimpan ${timeStr}`;
+    
+    setTimeout(() => {
+      indicator.className = 'autosave-indicator';
+    }, 5000);
+    
+  } catch (e) {
+    indicator.className = 'autosave-indicator';
+    text.textContent = 'Gagal simpan';
+  }
+}
+
+function loadAutoSave() {
+  try {
+    const saved = localStorage.getItem(AUTOSAVE_KEY);
+    if (!saved) return false;
+    
+    const data = JSON.parse(saved);
+    if (!data.features || data.features.length === 0) return false;
+    
+    const savedAt = data.savedAt ? new Date(data.savedAt) : null;
+    const timeAgo = savedAt ? getTimeAgo(savedAt) : '';
+    
+    const shouldRestore = confirm(
+      `📁 Ditemukan data proyek yang tersimpan otomatis${timeAgo ? ' (' + timeAgo + ')' : ''}.\n\n` +
+      `Pipa: ${data.features.filter(f => f.properties.elementType === 'pipe').length} segmen\n` +
+      `Aksesori: ${data.features.filter(f => f.properties.elementType === 'accessory').length} unit\n\n` +
+      `Apakah Anda ingin memulihkan data ini?`
+    );
+    
+    if (shouldRestore) {
+      loadGeoJSON(data);
+      if (data.mapCenter && data.mapZoom) {
+        map.setView(data.mapCenter, data.mapZoom);
+      }
+      showToast('✅ Data proyek berhasil dipulihkan!', 'success');
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if (seconds < 60) return 'baru saja';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} menit lalu`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  return `${days} hari lalu`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SIDEBAR TOGGLE
+// ═══════════════════════════════════════════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const body = document.body;
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  
+  sidebar.classList.toggle('collapsed');
+  body.classList.toggle('sidebar-open');
+  
+  toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+  
+  // Refresh map size after sidebar animation
+  setTimeout(() => map.invalidateSize(), 350);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  THEME TOGGLE (Dark / Light Mode)
+// ═══════════════════════════════════════════════════════════════════
+function toggleTheme() {
+  const body = document.body;
+  const isLight = body.classList.toggle('light-mode');
+  const btn = document.getElementById('btn-theme');
+  
+  btn.textContent = isLight ? '☀️' : '🌙';
+  btn.title = isLight ? 'Mode Gelap' : 'Mode Terang';
+  
+  try {
+    localStorage.setItem('pipemap_theme', isLight ? 'light' : 'dark');
+  } catch (e) {}
+  
+  showToast(isLight ? '☀️ Mode terang aktif' : '🌙 Mode gelap aktif', 'info', 1800);
+}
+
+function loadSavedTheme() {
+  try {
+    const theme = localStorage.getItem('pipemap_theme');
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+      document.getElementById('btn-theme').textContent = '☀️';
+    }
+  } catch (e) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  KEYBOARD HELP OVERLAY
+// ═══════════════════════════════════════════════════════════════════
+function openHelpOverlay() {
+  document.getElementById('help-overlay').classList.add('open');
+}
+
+function closeHelpOverlay() {
+  document.getElementById('help-overlay').classList.remove('open');
+}
+
+function toggleHelpOverlay() {
+  const overlay = document.getElementById('help-overlay');
+  if (overlay.classList.contains('open')) {
+    closeHelpOverlay();
+  } else {
+    openHelpOverlay();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SEARCH IMPROVEMENTS (History + Dropdown)
+// ═══════════════════════════════════════════════════════════════════
+let searchHistory = [];
+const MAX_SEARCH_HISTORY = 8;
+
+function loadSearchHistory() {
+  try {
+    const saved = localStorage.getItem('pipemap_search_history');
+    if (saved) searchHistory = JSON.parse(saved);
+  } catch (e) {}
+}
+
+function saveSearchHistory(query) {
+  searchHistory = searchHistory.filter(q => q !== query);
+  searchHistory.unshift(query);
+  if (searchHistory.length > MAX_SEARCH_HISTORY) searchHistory.pop();
+  try {
+    localStorage.setItem('pipemap_search_history', JSON.stringify(searchHistory));
+  } catch (e) {}
+}
+
+function showSearchHistory() {
+  if (searchHistory.length === 0) return;
+  const dropdown = document.getElementById('search-dropdown');
+  dropdown.innerHTML = searchHistory.map(q => `
+    <div class="search-result-item" onmousedown="document.getElementById('search-input').value='${q.replace(/'/g, "\\'")}';searchLocation();">
+      <span class="sri-icon">🕐</span>
+      <span>${q}</span>
+    </div>
+  `).join('');
+  dropdown.classList.add('open');
+}
+
+function onSearchInput(val) {
+  if (!val.trim()) {
+    showSearchHistory();
+    return;
+  }
+  hideSearchDropdown();
+}
+
+function hideSearchDropdown() {
+  document.getElementById('search-dropdown').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  COPY COORDINATES
+// ═══════════════════════════════════════════════════════════════════
+let lastMouseCoord = null;
+
+function copyCoordinates() {
+  if (!lastMouseCoord) {
+    showToast('Gerakkan kursor ke peta terlebih dahulu', 'warning', 2000);
+    return;
+  }
+  const coordText = `${lastMouseCoord.lat.toFixed(6)}, ${lastMouseCoord.lng.toFixed(6)}`;
+  navigator.clipboard.writeText(coordText).then(() => {
+    showToast(`📋 Koordinat disalin: ${coordText}`, 'success', 2500);
+  }).catch(() => {
+    showToast(`Koordinat: ${coordText}`, 'info', 3000);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HEADER STATS BADGES UPDATE
+// ═══════════════════════════════════════════════════════════════════
+function updateHeaderBadges() {
+  const pipeBadge = document.getElementById('badge-pipes');
+  const accBadge = document.getElementById('badge-acc');
+  const lenBadge = document.getElementById('badge-length');
+  
+  pipeBadge.textContent = pipes.length;
+  pipeBadge.classList.toggle('has-items', pipes.length > 0);
+  
+  accBadge.textContent = accessories.length;
+  accBadge.classList.toggle('has-items', accessories.length > 0);
+  
+  let totalLen = 0;
+  pipes.forEach(p => totalLen += p.props.length);
+  
+  if (totalLen >= 1000) {
+    lenBadge.textContent = (totalLen / 1000).toFixed(2) + ' km';
+  } else {
+    lenBadge.textContent = totalLen.toFixed(0) + ' m';
+  }
+  lenBadge.classList.toggle('has-items', totalLen > 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MINI-MAP CONTROL (Lightweight)
+// ═══════════════════════════════════════════════════════════════════
+function initMiniMap() {
+  // Create mini-map using Leaflet's built-in approach with a custom control
+  const MiniMapControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    
+    onAdd: function(map) {
+      const container = L.DomUtil.create('div', 'leaflet-control-minimap');
+      container.style.cssText = 'width:150px;height:120px;background:#0f172a;overflow:hidden;cursor:pointer;';
+      
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      
+      // Create mini map inside the container
+      setTimeout(() => {
+        const miniMap = L.map(container, {
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
+          touchZoom: false,
+          boxZoom: false,
+          keyboard: false
+        }).setView(map.getCenter(), Math.max(map.getZoom() - 5, 3));
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18, subdomains: ['a', 'b', 'c']
+        }).addTo(miniMap);
+        
+        // Viewport rectangle on mini-map
+        const bounds = map.getBounds();
+        const rect = L.rectangle(bounds, {
+          color: '#38bdf8', weight: 2, fillColor: '#38bdf8', fillOpacity: 0.15,
+          interactive: false
+        }).addTo(miniMap);
+        
+        // Sync on move
+        map.on('moveend zoomend', () => {
+          const center = map.getCenter();
+          miniMap.setView(center, Math.max(map.getZoom() - 5, 3), { animate: false });
+          rect.setBounds(map.getBounds());
+        });
+        
+        // Click mini-map to navigate
+        container.addEventListener('click', (e) => {
+          const containerRect = container.getBoundingClientRect();
+          const x = e.clientX - containerRect.left;
+          const y = e.clientY - containerRect.top;
+          const point = miniMap.containerPointToLatLng([x, y]);
+          map.flyTo(point, map.getZoom(), { duration: 0.5 });
+        });
+      }, 500);
+      
+      return container;
+    }
+  });
+  
+  new MiniMapControl().addTo(map);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS (Enhanced)
 // ═══════════════════════════════════════════════════════════════════
 document.addEventListener('keydown', (e) => {
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+  // Help overlay toggle
+  if (e.key === '?' || e.key === 'F1') {
+    e.preventDefault();
+    toggleHelpOverlay();
+    return;
+  }
+
+  // Close help overlay first if open
+  if (e.key === 'Escape' && document.getElementById('help-overlay').classList.contains('open')) {
+    closeHelpOverlay();
+    return;
+  }
+
+  // Ctrl+S to export/save
+  if (e.ctrlKey && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    performAutoSave();
+    exportGeoJSON();
+    return;
+  }
+
+  // Ctrl+O to import
+  if (e.ctrlKey && e.key.toLowerCase() === 'o') {
+    e.preventDefault();
+    importGeoJSON();
+    return;
+  }
+
+  // Ctrl+Z for Undo (global - not during pipe drawing)
+  if (e.ctrlKey && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+    if (currentMode === 'pipe' && drawingPipe) {
+      e.preventDefault();
+      undoLastPoint();
+      return;
+    }
+    e.preventDefault();
+    undoAction();
+    return;
+  }
+
+  // Ctrl+Y or Ctrl+Shift+Z for Redo
+  if ((e.ctrlKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'z')) {
+    e.preventDefault();
+    redoAction();
+    return;
+  }
 
   if (e.key === 'Enter') {
     if (currentMode === 'pipe' && drawingPipe) finishPipe();
     return;
   }
-  if (e.key === 'Backspace' || (e.ctrlKey && e.key.toLowerCase() === 'z')) {
+  if (e.key === 'Backspace') {
     if (currentMode === 'pipe' && drawingPipe) {
       e.preventDefault();
       undoLastPoint();
@@ -3594,23 +4561,41 @@ document.addEventListener('keydown', (e) => {
     case 'a': setMode('accessory'); break;
     case 'd': setMode('delete'); break;
     case 'm': setMode('measure'); break;
+    case 'b': toggleSidebar(); break;
   }
 });
 
 // ═══════════════════════════════════════════════════════════════════
 //  BOOTSTRAP
 // ═══════════════════════════════════════════════════════════════════
+loadSavedTheme();
+loadSearchHistory();
 initMap();
+initMiniMap();
 buildDiameterUI();
 buildAccessoryUI();
 updateStats();
 loadSavedKopData();
 updateLinePreview();
+updateUndoRedoButtons();
+
+// Try to restore auto-saved data
+const autoSaveRestored = loadAutoSave();
+startAutoSave();
+
+// Show welcome toast
+setTimeout(() => {
+  if (!autoSaveRestored) {
+    showToast('💧 Selamat datang di Pertek TRS! Tekan <b>?</b> untuk panduan keyboard.', 'info', 4500);
+  }
+}, 500);
 
 // Geolocation center
 if (navigator.geolocation) {
   navigator.geolocation.getCurrentPosition(pos => {
-    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    if (!autoSaveRestored) {
+      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    }
   }, () => {});
 }
 </script>

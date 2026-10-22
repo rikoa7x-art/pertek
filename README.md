@@ -55,12 +55,25 @@ Aplikasi web interaktif untuk pemetaan, perencanaan teknis (Pertek), dan penggam
 8. **Lembar Gambar Kerja & Kop Gambar (Etiket Standar PU / PDAM):**
    - Format standar gambar kerja teknik landscape (rasio A3 / A4).
    - Kop gambar memuat Logo Instansi Resmi, Keterangan Potongan Melintang Galian Pipa (*Trench*), Tabel Standar Kedalaman Galian Bina Marga, Legenda Diameter, Nama Kegiatan & Pekerjaan, Lokasi, Judul Gambar, Kolom Pengesahan 3 Pejabat (Pemeriksa, Mengetahui, Mengesahkan), Tanggal, Skala, dan Nomor Lembar.
+   - Fitur **Skala Auto** untuk menyesuaikan skala teknik gambar secara otomatis berdasarkan tingkat pembesaran (*zoom level*) peta.
    - Semua data Kop dapat diedit melalui modal editor dan tersimpan di penyimpanan lokal (*localStorage*).
    - Fitur cetak langsung ke printer atau simpan sebagai PDF beresolusi vektor.
 
-9. **Penyimpanan Format GeoJSON:**
+9. **Penyimpanan Format GeoJSON & Auto-Save:**
+   - Fitur **Auto-Save otomatis** setiap 30 detik ke browser `localStorage` dengan prompt pemulihan cerdas saat halaman dibuka kembali.
    - Simpan seluruh proyek jaringan pipa, aksesoris, kustomisasi notasi, dan data kop ke file `.geojson`.
    - Buka kembali file proyek kapan saja (*Import GeoJSON*).
+
+10. **Produktivitas & Fitur Modern Terbaru:**
+    - **Sistem Undo / Redo Global (Ctrl+Z / Ctrl+Y):** Membatalkan dan mengulang aksi penggambaran pipa, pemasangan fitting, pengeditan, atau penghapusan elemen.
+    - **Panel Panduan Keyboard Shortcut (? / F1):** Bantuan interaktif ringkas seluruh pintasan keyboard langsung di layar.
+    - **Sistem Notifikasi Toast Elegan:** Pengganti pop-up alert yang halus dan tidak memblokir interaksi pengguna.
+    - **Mini-Map (Peta Inset Navigasi):** Peta kecil di pojok kanan bawah untuk navigasi cepat dan orientasi area.
+    - **Bilah Sisi Responsif (Collapsible Sidebar):** Sidebar dapat disembunyikan/ditampilkan dengan tombol toggle atau shortcut `B`.
+    - **Mode Tampilan Gelap & Terang (Dark / Light Mode):** Pilihan tema dengan penyimpanan preferensi otomatis.
+    - **Salin Koordinat (1-Click Copy Lat, Lng):** Tombol cepat untuk menyalin koordinat kursor ke clipboard.
+    - **Pencarian Cerdas & Riwayat:** Pencarian tempat otomatis mengingat riwayat pencarian sebelumnya.
+    - **Statistik Header Real-time:** Penghitung segmen pipa, aksesori, dan total panjang jaringan secara langsung di topbar.
 
 ---
 
