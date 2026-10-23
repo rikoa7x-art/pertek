@@ -402,9 +402,13 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.6); cursor: move;
     }
 
-    /* ─── CAD Grayscale Technical Basemap Filter ──────────────── */
+    /* ─── CAD Grayscale & Blueprint Technical Basemap Filter ─── */
     .leaflet-tile.cad-gray-tiles {
       filter: grayscale(100%) contrast(120%) brightness(105%);
+    }
+
+    .leaflet-tile.cad-blueprint-tiles {
+      filter: invert(90%) hue-rotate(185deg) contrast(130%) brightness(85%);
     }
 
     .leaflet-control-layers {
@@ -2460,12 +2464,7 @@ function initMap() {
   map = L.map('map', { zoomControl: true }).setView([-6.2088, 106.8456], 14);
 
   // ─── Peta Dasar Infrastruktur Teknik (Gaya Gambar Kerja / CAD) ──
-  const cadCarto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 20,
-    subdomains: ['a', 'b', 'c', 'd'],
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-  });
-
+  // 100% Bebas API Key: Google Maps CAD Monokrom (Teknis & Lengkap)
   const cadGoogle = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
     maxZoom: 22,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -2473,10 +2472,25 @@ function initMap() {
     className: 'cad-gray-tiles'
   });
 
-  const cadCartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // 100% Bebas API Key: ESRI World Light Gray Base (Kanvas Teknik PU)
+  const esriGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16,
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+  });
+
+  // 100% Bebas API Key: Google Maps Blueprint (AutoCAD Dark Style)
+  const cadBlueprint = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 22,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps (CAD Blueprint)',
+    className: 'cad-blueprint-tiles'
+  });
+
+  // 100% Bebas API Key: OpenStreetMap CAD Monokrom
+  const osmCad = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20,
-    subdomains: ['a', 'b', 'c', 'd'],
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    attribution: '© OpenStreetMap (CAD Monokrom)',
+    className: 'cad-gray-tiles'
   });
 
   // ─── Google Maps Tile Layers Standar ─────────────────────────────
@@ -2500,9 +2514,10 @@ function initMap() {
   });
 
   baseLayers = {
-    cadCarto,
     cadGoogle,
-    cadCartoDark,
+    esriGray,
+    cadBlueprint,
+    osmCad,
     googleRoadmap,
     googleHybrid,
     googleSatellite,
@@ -2511,19 +2526,20 @@ function initMap() {
     osm
   };
 
-  // Aktifkan default Peta Infrastruktur Teknik (CAD Light)
-  cadCarto.addTo(map);
+  // Aktifkan default: Google Maps CAD Monokrom (Gaya Gambar Kerja Tanpa API Key)
+  cadGoogle.addTo(map);
 
   L.control.layers({
-    '📐 Peta Infrastruktur Teknik (CAD Light)': cadCarto,
     '📐 Google Maps (CAD Monokrom)': cadGoogle,
-    '📐 CAD Blueprint (Dark DWG)': cadCartoDark,
+    '📐 ESRI Canvas (CAD Light Teknik)': esriGray,
+    '📐 CAD Blueprint (Dark DWG)': cadBlueprint,
+    '📐 OpenStreetMap (CAD Monokrom)': osmCad,
     '🗺️ Google Maps (Jalan Standar)': googleRoadmap,
     '🛰️ Google Maps (Satelit Hybrid)': googleHybrid,
     '🌍 Google Maps (Satelit Murni)': googleSatellite,
     '🏔️ Google Maps (Medan / Terrain)': googleTerrain,
     '🚦 Google Maps (Traffic)': googleTraffic,
-    '🌐 OpenStreetMap': osm
+    '🌐 OpenStreetMap (Standar)': osm
   }, {}, { position: 'topright' }).addTo(map);
 
   L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
@@ -4317,8 +4333,8 @@ function enterLayoutMode() {
   renderKopView();
 
   const btnCad = document.getElementById('btn-toggle-cad-mode');
-  if (btnCad && baseLayers.cadCarto) {
-    const isCad = map.hasLayer(baseLayers.cadCarto) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadCartoDark);
+  if (btnCad && baseLayers.cadGoogle) {
+    const isCad = map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.esriGray) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
     btnCad.innerHTML = isCad ? '📐 Backdrop: CAD' : '🗺️ Backdrop: Normal';
   }
 
@@ -4345,21 +4361,21 @@ function exitLayoutMode() {
 
 function toggleCadBasemap() {
   const btn = document.getElementById('btn-toggle-cad-mode');
-  if (!baseLayers.cadCarto || !baseLayers.googleRoadmap) return;
-  const isCadActive = map.hasLayer(baseLayers.cadCarto) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadCartoDark);
+  if (!baseLayers.cadGoogle || !baseLayers.googleRoadmap) return;
+  const isCadActive = map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.esriGray) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
 
   if (isCadActive) {
-    // Beralih ke Google Maps standar
+    // Beralih ke Google Maps standar berwarna
     Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
     baseLayers.googleRoadmap.addTo(map);
     if (btn) btn.innerHTML = '🗺️ Backdrop: Normal';
     showToast('Backdrop beralih ke: Google Maps Standar', 'info', 2000);
   } else {
-    // Beralih ke Peta Infrastruktur CAD Light
+    // Beralih ke Google Maps CAD Monokrom (Teknik)
     Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
-    baseLayers.cadCarto.addTo(map);
+    baseLayers.cadGoogle.addTo(map);
     if (btn) btn.innerHTML = '📐 Backdrop: CAD';
-    showToast('Backdrop beralih ke: Peta Infrastruktur Teknik (CAD Light)', 'success', 2500);
+    showToast('Backdrop beralih ke: Google Maps CAD Monokrom', 'success', 2500);
   }
 }
 
