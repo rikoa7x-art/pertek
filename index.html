@@ -2186,8 +2186,6 @@
 // ═══════════════════════════════════════════════════════════════════
 const PIPE_CATALOG = {
   PVC: [
-    { mm: 20,  inch: '1/2"',   color: '#FF8A80', weight: 4,  label: '1/2" (20 mm)' },
-    { mm: 25,  inch: '3/4"',   color: '#FF5252', weight: 4,  label: '3/4" (25 mm)' },
     { mm: 32,  inch: '1"',     color: '#FF9E80', weight: 5,  label: '1" (32 mm)' },
     { mm: 40,  inch: '1 1/4"', color: '#FFAB40', weight: 5,  label: '1 1/4" (40 mm)' },
     { mm: 50,  inch: '1 1/2"', color: '#FFD740', weight: 6,  label: '1 1/2" (50 mm)' },
@@ -2201,8 +2199,8 @@ const PIPE_CATALOG = {
     { mm: 315, inch: '12"',    color: '#FF4081', weight: 18, label: '12" (315 mm)' }
   ],
   HDPE: [
-    { mm: 25,  inch: '3/4"',   color: '#FF5252', weight: 4,  label: 'OD 25 mm (3/4")' },
     { mm: 32,  inch: '1"',     color: '#FF9E80', weight: 5,  label: 'OD 32 mm (1")' },
+    { mm: 40,  inch: '1 1/4"', color: '#FFAB40', weight: 5,  label: 'OD 40 mm (1 1/4")' },
     { mm: 50,  inch: '1 1/2"', color: '#FFD740', weight: 6,  label: 'OD 50 mm (1 1/2")' },
     { mm: 63,  inch: '2"',     color: '#EEFF41', weight: 7,  label: 'OD 63 mm (2")' },
     { mm: 75,  inch: '2 1/2"', color: '#CCFF90', weight: 8,  label: 'OD 75 mm (2 1/2")' },
@@ -2211,9 +2209,7 @@ const PIPE_CATALOG = {
     { mm: 160, inch: '6"',     color: '#40C4FF', weight: 12, label: 'OD 160 mm (6")' },
     { mm: 200, inch: '8"',     color: '#7C4DFF', weight: 14, label: 'OD 200 mm (8")' },
     { mm: 250, inch: '10"',    color: '#EA80FC', weight: 16, label: 'OD 250 mm (10")' },
-    { mm: 315, inch: '12"',    color: '#FF4081', weight: 18, label: 'OD 315 mm (12")' },
-    { mm: 400, inch: '16"',    color: '#00E5FF', weight: 20, label: 'OD 400 mm (16")' },
-    { mm: 500, inch: '20"',    color: '#FF6E40', weight: 22, label: 'OD 500 mm (20")' }
+    { mm: 315, inch: '12"',    color: '#FF4081', weight: 18, label: 'OD 315 mm (12")' }
   ]
 };
 
@@ -2410,7 +2406,7 @@ let map;
 let currentMode       = 'pipe';
 let currentMaterial   = 'PVC';
 let currentPipeStatus = 'rencana';
-let selectedDiamIdx   = 8; // default 4" (110 mm) for PVC
+let selectedDiamIdx   = 6; // default 4" (110 mm) for PVC
 let selectedAcc       = ACCESSORIES[0]; // default Gate Valve
 let currentLineStyle  = 'solid';        // 'solid' | 'dot' | 'dash'
 let currentLineWeight = 10;             // default for 4" (110 mm)
@@ -4486,21 +4482,8 @@ function saveKopModal() {
 function buildKopLegend() {
   const cont = document.getElementById('kop-legend-list');
   cont.innerHTML = '';
-  // Show representative diameters matching the Tirta Rangga drawing
-  const sampleList = [
-    { inch: '1/2"',  mm: 20,  color: '#FF8A80' },
-    { inch: '3/4"',  mm: 25,  color: '#FF5252' },
-    { inch: '1"',    mm: 32,  color: '#FF9E80' },
-    { inch: '1 1/2"',mm: 50,  color: '#FFD740' },
-    { inch: '2"',    mm: 63,  color: '#EEFF41' },
-    { inch: '3"',    mm: 90,  color: '#69F0AE' },
-    { inch: '4"',    mm: 110, color: '#00E676' },
-    { inch: '6"',    mm: 160, color: '#40C4FF' },
-    { inch: '8"',    mm: 200, color: '#7C4DFF' },
-    { inch: '10"',   mm: 250, color: '#EA80FC' },
-    { inch: '12"',   mm: 315, color: '#FF4081' },
-    { inch: '16"',   mm: 400, color: '#00E5FF' }
-  ];
+  // Show representative diameters matching catalog (1" hingga 12")
+  const sampleList = PIPE_CATALOG.PVC;
 
   sampleList.forEach(d => {
     const el = document.createElement('div');
