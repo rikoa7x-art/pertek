@@ -402,9 +402,17 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.6); cursor: move;
     }
 
-    /* ─── CAD Grayscale & Blueprint Technical Basemap Filter ─── */
+    /* ─── CAD Grayscale, ESRI & Blueprint Technical Basemap Filter ─── */
     .leaflet-tile.cad-gray-tiles {
-      filter: grayscale(100%) contrast(120%) brightness(105%);
+      filter: grayscale(100%) contrast(125%) brightness(105%);
+    }
+
+    .leaflet-tile.esri-canvas-tiles {
+      filter: contrast(200%) brightness(92%) saturate(0%);
+    }
+
+    .leaflet-tile.esri-ref-tiles {
+      filter: contrast(160%) brightness(65%) saturate(0%);
     }
 
     .leaflet-tile.cad-blueprint-tiles {
@@ -2472,10 +2480,27 @@ function initMap() {
     className: 'cad-gray-tiles'
   });
 
-  // 100% Bebas API Key: ESRI World Light Gray Base (Kanvas Teknik PU)
-  const esriGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 16,
-    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+  // 100% Bebas API Key: ESRI Canvas Jelas & Tajam (Base + Label Reference + High Contrast)
+  const esriCanvasBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 20,
+    maxNativeZoom: 18,
+    attribution: 'Tiles &copy; Esri',
+    className: 'esri-canvas-tiles'
+  });
+  const esriCanvasRef = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 20,
+    maxNativeZoom: 18,
+    attribution: 'Labels &copy; Esri',
+    className: 'esri-ref-tiles'
+  });
+  const esriCanvas = L.layerGroup([esriCanvasBase, esriCanvasRef]);
+
+  // 100% Bebas API Key: ESRI Street CAD (Detail Bangunan, Gang & Jalan Tajam)
+  const esriStreetCad = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 20,
+    maxNativeZoom: 19,
+    attribution: 'Tiles &copy; Esri (CAD High-Contrast)',
+    className: 'cad-gray-tiles'
   });
 
   // 100% Bebas API Key: Google Maps Blueprint (AutoCAD Dark Style)
@@ -2514,8 +2539,9 @@ function initMap() {
   });
 
   baseLayers = {
+    esriCanvas,
+    esriStreetCad,
     cadGoogle,
-    esriGray,
     cadBlueprint,
     osmCad,
     googleRoadmap,
@@ -2526,12 +2552,13 @@ function initMap() {
     osm
   };
 
-  // Aktifkan default: Google Maps CAD Monokrom (Gaya Gambar Kerja Tanpa API Key)
-  cadGoogle.addTo(map);
+  // Aktifkan default: ESRI Canvas Tajam & Jelas
+  esriCanvas.addTo(map);
 
   L.control.layers({
+    '📐 ESRI Canvas (CAD Tajam & Jelas)': esriCanvas,
+    '📐 ESRI Street CAD (Detail Bangunan & Jalan)': esriStreetCad,
     '📐 Google Maps (CAD Monokrom)': cadGoogle,
-    '📐 ESRI Canvas (CAD Light Teknik)': esriGray,
     '📐 CAD Blueprint (Dark DWG)': cadBlueprint,
     '📐 OpenStreetMap (CAD Monokrom)': osmCad,
     '🗺️ Google Maps (Jalan Standar)': googleRoadmap,
@@ -4333,8 +4360,8 @@ function enterLayoutMode() {
   renderKopView();
 
   const btnCad = document.getElementById('btn-toggle-cad-mode');
-  if (btnCad && baseLayers.cadGoogle) {
-    const isCad = map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.esriGray) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
+  if (btnCad && baseLayers.esriCanvas) {
+    const isCad = map.hasLayer(baseLayers.esriCanvas) || map.hasLayer(baseLayers.esriStreetCad) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
     btnCad.innerHTML = isCad ? '📐 Backdrop: CAD' : '🗺️ Backdrop: Normal';
   }
 
@@ -4361,8 +4388,8 @@ function exitLayoutMode() {
 
 function toggleCadBasemap() {
   const btn = document.getElementById('btn-toggle-cad-mode');
-  if (!baseLayers.cadGoogle || !baseLayers.googleRoadmap) return;
-  const isCadActive = map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.esriGray) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
+  if (!baseLayers.esriCanvas || !baseLayers.googleRoadmap) return;
+  const isCadActive = map.hasLayer(baseLayers.esriCanvas) || map.hasLayer(baseLayers.esriStreetCad) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
 
   if (isCadActive) {
     // Beralih ke Google Maps standar berwarna
@@ -4371,11 +4398,11 @@ function toggleCadBasemap() {
     if (btn) btn.innerHTML = '🗺️ Backdrop: Normal';
     showToast('Backdrop beralih ke: Google Maps Standar', 'info', 2000);
   } else {
-    // Beralih ke Google Maps CAD Monokrom (Teknik)
+    // Beralih ke ESRI Canvas Tajam & Jelas
     Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
-    baseLayers.cadGoogle.addTo(map);
+    baseLayers.esriCanvas.addTo(map);
     if (btn) btn.innerHTML = '📐 Backdrop: CAD';
-    showToast('Backdrop beralih ke: Google Maps CAD Monokrom', 'success', 2500);
+    showToast('Backdrop beralih ke: ESRI Canvas (CAD Tajam & Jelas)', 'success', 2500);
   }
 }
 
