@@ -864,6 +864,31 @@
       font-weight: 800; color: #10b981; border-top: 2px solid #38bdf8; background: #0b1120;
     }
 
+    /* ─── Pipe Status Toggle (Rencana vs Existing) ───────── */
+    .status-toggle {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 8px 12px; background: #0b1120; border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+    .status-tab-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 7px 6px; border-radius: 8px;
+      border: 2px solid #334155; cursor: pointer;
+      background: #1e293b; color: #94a3b8;
+      transition: all 0.2s;
+    }
+    .status-tab-btn:hover { background: #334155; color: #e2e8f0; }
+    .status-tab-btn.active.rencana {
+      background: #1e3a5f; border-color: #38bdf8; color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+    .status-tab-btn.active.existing {
+      background: #422006; border-color: #f97316; color: #ffffff;
+      box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
+    }
+    .status-tab-title { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+    .status-tab-sub { font-size: 9px; opacity: 0.8; }
+
     /* ─── PRINT MEDIA QUERY (Exact Vector A3 / A4) ───────────── */
     @media print {
       @page {
@@ -1421,6 +1446,17 @@
 
     <!-- ── PANEL 1: PIPA & DIAMETER ── -->
     <div id="panel-pipe" class="sidebar-panel">
+      <!-- ── STATUS PIPA: RENCANA vs EXISTING ── -->
+      <div class="status-toggle">
+        <div id="status-btn-rencana" class="status-tab-btn active rencana" onclick="switchPipeStatus('rencana')">
+          <span class="status-tab-title">📐 Rencana</span>
+          <span class="status-tab-sub">Pipa Baru Direncanakan</span>
+        </div>
+        <div id="status-btn-existing" class="status-tab-btn existing" onclick="switchPipeStatus('existing')">
+          <span class="status-tab-title">🟠 Existing</span>
+          <span class="status-tab-sub">Pipa Terpasang</span>
+        </div>
+      </div>
       <div class="material-toggle">
         <div id="mat-btn-pvc" class="mat-tab-btn active pvc" onclick="switchMaterial('PVC')">
           <span class="mat-tab-title">🔷 PVC (AW)</span>
@@ -1560,6 +1596,7 @@
     <!-- Floating Drawing Toolbar -->
     <div id="drawing-toolbar" class="floating-toolbar" style="display:none;">
       <span class="draw-info">
+        <span id="dt-status" style="color:#94a3b8;font-size:10px;">[RENCANA]</span>
         <span id="dt-mat" style="color:#38bdf8;">PVC</span> &bull; 
         <span id="dt-nodes">0</span> titik &bull; 
         <span id="dt-length">0.0</span> m
@@ -1590,6 +1627,7 @@
       <div class="stat">Pipa: <span class="stat-val" id="st-pipes">0</span> segmen</div>
       <div class="stat">PVC: <span class="stat-val" id="st-pvc-len">0</span> m</div>
       <div class="stat">HDPE: <span class="stat-val" id="st-hdpe-len">0</span> m</div>
+      <div class="stat">Exist: <span class="stat-val" id="st-exist-len">0</span> m</div>
       <div class="stat">Aksesori: <span class="stat-val" id="st-acc">0</span></div>
       <div class="stat" id="st-coord" style="margin-left:auto;">
         <button class="coord-copy-btn" onclick="copyCoordinates()" title="Salin koordinat kursor">📋 Copy</button>
@@ -1939,6 +1977,11 @@
     <h3>✏️ Edit Properti Pipa</h3>
     <label>Nama / ID Pipa</label>
     <input type="text" id="pm-name" placeholder="Misal: Pipa Distribusi Utama" />
+    <label>Status Pipa</label>
+    <select id="pm-status">
+      <option value="rencana">📐 Rencana (Pipa Baru Direncanakan)</option>
+      <option value="existing">🟠 Existing (Pipa Sudah Terpasang)</option>
+    </select>
     <label>Material Pipa</label>
     <select id="pm-material" onchange="onModalMaterialChange()">
       <option value="PVC">PVC (Polyvinyl Chloride)</option>
@@ -2368,6 +2411,7 @@ let kopData = { ...DEFAULT_KOP_DATA };
 let map;
 let currentMode       = 'pipe';
 let currentMaterial   = 'PVC';
+let currentPipeStatus = 'rencana';
 let selectedDiamIdx   = 8; // default 4" (110 mm) for PVC
 let selectedAcc       = ACCESSORIES[0]; // default Gate Valve
 let currentLineStyle  = 'solid';        // 'solid' | 'dot' | 'dash'
@@ -2463,6 +2507,18 @@ function switchSidebarTab(tabName) {
 // ═══════════════════════════════════════════════════════════════════
 //  MATERIAL & DIAMETER SELECTION
 // ═══════════════════════════════════════════════════════════════════
+function switchPipeStatus(status) {
+  currentPipeStatus = status;
+  document.getElementById('status-btn-rencana').classList.toggle('active', status === 'rencana');
+  document.getElementById('status-btn-existing').classList.toggle('active', status === 'existing');
+  // Update drawing toolbar indicator
+  const dtStatus = document.getElementById('dt-status');
+  if (dtStatus) dtStatus.textContent = status === 'existing' ? '[EXISTING]' : '[RENCANA]';
+  // Update live preview & style badge
+  updateStyleBadge();
+  updateLineLivePreview();
+}
+
 function switchMaterial(mat) {
   currentMaterial = mat;
   document.getElementById('mat-btn-pvc').classList.toggle('active', mat === 'PVC');
@@ -2882,6 +2938,8 @@ function handlePipeClick(latlng) {
     drawingPipe = true;
     pipePoints = [latlng];
     document.getElementById('drawing-toolbar').style.display = 'flex';
+    document.getElementById('dt-status').textContent = currentPipeStatus === 'existing' ? '[EXISTING]' : '[RENCANA]';
+    document.getElementById('dt-status').style.color = currentPipeStatus === 'existing' ? '#f97316' : '#94a3b8';
     document.getElementById('dt-mat').textContent = currentMaterial;
     document.getElementById('dt-nodes').textContent = '1';
     document.getElementById('dt-length').textContent = '0.0';
@@ -2934,7 +2992,8 @@ function finishPipe() {
     pressure: '4',
     year: new Date().getFullYear(),
     notes: '',
-    length: len
+    length: len,
+    pipeStatus: currentPipeStatus
   };
 
   const poly = createPipePolyline(pipePoints, props);
@@ -2953,12 +3012,18 @@ function createPipePolyline(pts, props) {
   const weight = props.weight !== undefined ? props.weight : (getSelectedDiameterByProps(props)?.weight || 6);
   const style = props.lineStyle || 'solid';
   const dashArray = props.dashArray !== undefined ? props.dashArray : getDashArrayForStyle(style, weight);
+  const isExisting = props.pipeStatus === 'existing';
+
+  // Existing pipe: warna orange-coklat, opacity lebih rendah, selalu solid
+  const lineColor = isExisting ? getExistingPipeColor(props.color) : props.color;
+  const lineOpacity = isExisting ? 0.75 : 0.95;
+  const lineDash = isExisting ? null : dashArray;
 
   const poly = L.polyline(pts, {
-    color: props.color,
+    color: lineColor,
     weight: weight,
-    opacity: 0.95,
-    dashArray: dashArray,
+    opacity: lineOpacity,
+    dashArray: lineDash,
     lineCap: 'round',
     lineJoin: 'round'
   });
@@ -2973,6 +3038,29 @@ function createPipePolyline(pts, props) {
   });
 
   return poly;
+}
+
+function getExistingPipeColor(originalColor) {
+  // Map warna rencana ke warna existing (lebih gelap/orange tones)
+  // Existing pipe selalu ditampilkan dengan warna coklat-orange agar beda dari rencana
+  const existingColorMap = {
+    '#38bdf8': '#f97316', // PVC biru -> orange
+    '#60a5fa': '#fb923c',
+    '#818cf8': '#fbbf24',
+    '#c084fc': '#f59e0b',
+    '#f472b6': '#ef4444',
+    '#34d399': '#a16207',
+    '#a3e635': '#854d0e',
+    '#fbbf24': '#92400e',
+    '#fb923c': '#7c2d12',
+    // HDPE kuning -> coklat tua
+    '#facc15': '#b45309',
+    '#fde047': '#a16207',
+    '#fef08a': '#78350f',
+    '#d9f99d': '#713f12',
+    '#bbf7d0': '#78350f',
+  };
+  return existingColorMap[originalColor] || '#f97316';
 }
 
 function cancelDrawing() {
@@ -3000,7 +3088,8 @@ function getPipeLabelText(props) {
   if (props.customLabel && props.customLabel.trim()) {
     return props.customLabel.trim();
   }
-  return `Renc. Pipa ${props.material} Ø ${props.inch} - ${props.length.toFixed(0)} m'`;
+  const prefix = props.pipeStatus === 'existing' ? 'Exist. Pipa' : 'Renc. Pipa';
+  return `${prefix} ${props.material} Ø ${props.inch} - ${props.length.toFixed(0)} m'`;
 }
 
 function updatePipeCallouts() {
@@ -3132,7 +3221,8 @@ function saveCalloutModal() {
 function resetCalloutToAuto() {
   const pobj = pipes.find(p => p.id === editingCalloutPipeId);
   if (!pobj) return;
-  const autoText = `Renc. Pipa ${pobj.props.material} Ø ${pobj.props.inch} - ${pobj.props.length.toFixed(0)} m'`;
+  const prefix = pobj.props.pipeStatus === 'existing' ? 'Exist. Pipa' : 'Renc. Pipa';
+  const autoText = `${prefix} ${pobj.props.material} Ø ${pobj.props.inch} - ${pobj.props.length.toFixed(0)} m'`;
   document.getElementById('cm-text').value = autoText;
 }
 
@@ -3669,6 +3759,7 @@ function showProperties(type, props) {
         </h4>
         <div class="prop-row"><span class="prop-key">ID Pipa:</span><span class="prop-val">${props.id}</span></div>
         <div class="prop-row"><span class="prop-key">Nama:</span><span class="prop-val">${props.name}</span></div>
+        <div class="prop-row"><span class="prop-key">Status:</span><span class="prop-val" style="color:${props.pipeStatus==='existing'?'#f97316':'#38bdf8'};font-weight:700;">${props.pipeStatus==='existing'?'🟠 Existing':'📐 Rencana'}</span></div>
         <div class="prop-row"><span class="prop-key">Material:</span><span class="prop-val" style="color:${props.material==='HDPE'?'#facc15':'#38bdf8'}">${props.material}</span></div>
         <div class="prop-row"><span class="prop-key">Diameter:</span><span class="prop-val" style="color:${props.color}">${props.inch} (${props.diameter} mm)</span></div>
         <div class="prop-row"><span class="prop-key">Gaya Garis:</span><span class="prop-val">${styleLabel}</span></div>
@@ -3764,6 +3855,7 @@ function openPipeModal(id) {
   map.closePopup();
 
   document.getElementById('pm-name').value     = pobj.props.name;
+  document.getElementById('pm-status').value   = pobj.props.pipeStatus || 'rencana';
   document.getElementById('pm-material').value = pobj.props.material;
   populateModalDiameters(pobj.props.material, pobj.props.diamIdx);
 
@@ -3834,11 +3926,16 @@ function savePipeModal() {
   pobj.props.pressure  = document.getElementById('pm-pressure').value;
   pobj.props.year      = document.getElementById('pm-year').value;
   pobj.props.notes     = document.getElementById('pm-notes').value;
+  pobj.props.pipeStatus = document.getElementById('pm-status').value;
 
+  const isExistingNew = pobj.props.pipeStatus === 'existing';
+  const finalColor = isExistingNew ? getExistingPipeColor(d.color) : d.color;
+  pobj.props.color = d.color; // simpan warna asli
   pobj.polyline.setStyle({
-    color: d.color,
+    color: finalColor,
     weight: weight,
-    dashArray: dash,
+    opacity: isExistingNew ? 0.75 : 0.95,
+    dashArray: isExistingNew ? null : dash,
     lineCap: 'round',
     lineJoin: 'round'
   });
@@ -3988,14 +4085,18 @@ function cancelMeasure() {
 function openBOQModal() {
   const cont = document.getElementById('boq-content');
 
-  const pipeSummary = {};
-  let totalLengthAll = 0;
-  let totalSegmentsAll = 0;
+  const pipeSummaryRencana = {};
+  const pipeSummaryExisting = {};
+  let totalLengthRencana = 0, totalSegmentsRencana = 0;
+  let totalLengthExisting = 0, totalSegmentsExisting = 0;
+  let totalLengthAll = 0, totalSegmentsAll = 0;
 
   pipes.forEach(p => {
     const key = `${p.props.material}__${p.props.diameter}__${p.props.inch}`;
-    if (!pipeSummary[key]) {
-      pipeSummary[key] = {
+    const isExist = p.props.pipeStatus === 'existing';
+    const summary = isExist ? pipeSummaryExisting : pipeSummaryRencana;
+    if (!summary[key]) {
+      summary[key] = {
         material: p.props.material,
         diameter: p.props.diameter,
         inch: p.props.inch,
@@ -4004,8 +4105,10 @@ function openBOQModal() {
         length: 0
       };
     }
-    pipeSummary[key].count += 1;
-    pipeSummary[key].length += p.props.length;
+    summary[key].count += 1;
+    summary[key].length += p.props.length;
+    if (isExist) { totalLengthExisting += p.props.length; totalSegmentsExisting += 1; }
+    else { totalLengthRencana += p.props.length; totalSegmentsRencana += 1; }
     totalLengthAll += p.props.length;
     totalSegmentsAll += 1;
   });
@@ -4025,11 +4128,13 @@ function openBOQModal() {
     totalAccAll += 1;
   });
 
-  let html = `
-    <h4 style="color:#7dd3fc;margin-bottom:6px;font-size:13px;">1. Rekapitulasi Pipa Jaringan</h4>
+  function buildPipeTable(summary, totalLength, totalSegments, label, headerColor) {
+    let html = `
+    <h4 style="color:${headerColor};margin-bottom:6px;font-size:13px;">${label}</h4>
     <table class="boq-table">
       <thead>
         <tr>
+          <th>Status</th>
           <th>Material</th>
           <th>Diameter</th>
           <th>Segmen</th>
@@ -4037,32 +4142,52 @@ function openBOQModal() {
         </tr>
       </thead>
       <tbody>`;
-
-  const pipeKeys = Object.keys(pipeSummary);
-  if (pipeKeys.length === 0) {
-    html += `<tr><td colspan="4" style="text-align:center;color:#64748b;font-style:italic;">Belum ada pipa yang digambar.</td></tr>`;
-  } else {
-    pipeKeys.forEach(k => {
-      const row = pipeSummary[k];
+    const keys = Object.keys(summary);
+    const statusLabel = label.includes('Existing') ? '🟠 Existing' : '📐 Rencana';
+    if (keys.length === 0) {
+      html += `<tr><td colspan="5" style="text-align:center;color:#64748b;font-style:italic;">Tidak ada data.</td></tr>`;
+    } else {
+      keys.forEach(k => {
+        const row = summary[k];
+        html += `
+          <tr>
+            <td style="font-size:10px;color:${headerColor};">${statusLabel}</td>
+            <td><span style="font-weight:700;color:${row.material==='HDPE'?'#facc15':'#38bdf8'}">${row.material}</span></td>
+            <td><span style="display:inline-block;width:12px;height:4px;background:${row.color};border-radius:2px;margin-right:6px;"></span>${row.inch} (${row.diameter} mm)</td>
+            <td>${row.count} unit</td>
+            <td><strong>${row.length.toFixed(1)} m</strong> (${(row.length/1000).toFixed(3)} km)</td>
+          </tr>`;
+      });
       html += `
-        <tr>
-          <td><span style="font-weight:700;color:${row.material==='HDPE'?'#facc15':'#38bdf8'}">${row.material}</span></td>
-          <td><span style="display:inline-block;width:12px;height:4px;background:${row.color};border-radius:2px;margin-right:6px;"></span>${row.inch} (${row.diameter} mm)</td>
-          <td>${row.count} unit</td>
-          <td><strong>${row.length.toFixed(1)} m</strong> (${(row.length/1000).toFixed(3)} km)</td>
+        <tr class="boq-total-row">
+          <td colspan="3">TOTAL PANJANG</td>
+          <td>${totalSegments} segmen</td>
+          <td>${totalLength.toFixed(1)} m (${(totalLength/1000).toFixed(3)} km)</td>
         </tr>`;
-    });
-    html += `
-      <tr class="boq-total-row">
-        <td colspan="2">TOTAL PANJANG PIPA</td>
-        <td>${totalSegmentsAll} segmen</td>
-        <td>${totalLengthAll.toFixed(1)} m (${(totalLengthAll/1000).toFixed(3)} km)</td>
-      </tr>`;
+    }
+    html += `</tbody></table>`;
+    return html;
   }
-  html += `</tbody></table>`;
+
+  let html = buildPipeTable(pipeSummaryRencana, totalLengthRencana, totalSegmentsRencana,
+    '1. Pipa Rencana (Baru Direncanakan)', '#38bdf8');
+  html += buildPipeTable(pipeSummaryExisting, totalLengthExisting, totalSegmentsExisting,
+    '2. Pipa Existing (Sudah Terpasang)', '#f97316');
+
+  // Grand total
+  html += `
+    <table class="boq-table" style="margin-top:4px;">
+      <tbody>
+        <tr class="boq-total-row">
+          <td colspan="3">GRAND TOTAL SEMUA PIPA</td>
+          <td>${totalSegmentsAll} segmen</td>
+          <td>${totalLengthAll.toFixed(1)} m (${(totalLengthAll/1000).toFixed(3)} km)</td>
+        </tr>
+      </tbody>
+    </table>`;
 
   html += `
-    <h4 style="color:#7dd3fc;margin:12px 0 6px;font-size:13px;">2. Rekapitulasi Aksesori & Fitting</h4>
+    <h4 style="color:#7dd3fc;margin:12px 0 6px;font-size:13px;">3. Rekapitulasi Aksesori &amp; Fitting</h4>
     <table class="boq-table">
       <thead>
         <tr>
@@ -4095,7 +4220,6 @@ function openBOQModal() {
   cont.innerHTML = html;
   document.getElementById('boq-modal').classList.add('open');
 }
-
 function closeBOQModal() {
   document.getElementById('boq-modal').classList.remove('open');
 }
@@ -4414,6 +4538,12 @@ function buildKopLegend() {
     el.innerHTML = `<span class="kop-leg-dot" style="background:${d.color};"></span> Ø ${d.inch} (${d.mm}mm)`;
     cont.appendChild(el);
   });
+
+  // Add existing pipe legend entry
+  const existingEl = document.createElement('div');
+  existingEl.className = 'kop-leg-item';
+  existingEl.innerHTML = `<span class="kop-leg-dot" style="background:#f97316;border:2px solid #7c2d12;"></span> 🟠 Pipa Existing`;
+  cont.appendChild(existingEl);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4460,16 +4590,23 @@ function updateStats() {
   document.getElementById('st-pipes').textContent = pipes.length;
   document.getElementById('st-acc').textContent   = accessories.length;
 
-  let pvcLen = 0;
-  let hdpeLen = 0;
+  let pvcLen = 0, hdpeLen = 0, existLen = 0;
   pipes.forEach(p => {
-    if (p.props.material === 'HDPE') hdpeLen += p.props.length;
-    else pvcLen += p.props.length;
+    const isExist = p.props.pipeStatus === 'existing';
+    if (isExist) {
+      existLen += p.props.length;
+    } else if (p.props.material === 'HDPE') {
+      hdpeLen += p.props.length;
+    } else {
+      pvcLen += p.props.length;
+    }
   });
 
-  document.getElementById('st-pvc-len').textContent = pvcLen.toFixed(0);
+  document.getElementById('st-pvc-len').textContent  = pvcLen.toFixed(0);
   document.getElementById('st-hdpe-len').textContent = hdpeLen.toFixed(0);
-  
+  const stExist = document.getElementById('st-exist-len');
+  if (stExist) stExist.textContent = existLen.toFixed(0);
+
   updateHeaderBadges();
 }
 
@@ -4620,7 +4757,8 @@ function loadGeoJSON(geojson) {
         lineStyle: p.lineStyle || (p.material === 'HDPE' ? 'dash' : 'solid'),
         weight: p.weight || (getSelectedDiameterByProps(p)?.weight || 6),
         customLabel: p.customLabel || undefined,
-        labelPos: p.labelPos || undefined
+        labelPos: p.labelPos || undefined,
+        pipeStatus: p.pipeStatus || 'rencana'
       };
       const poly = createPipePolyline(pts, props);
       poly.addTo(map);
