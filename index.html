@@ -2469,7 +2469,7 @@ let pendingLabelTarget      = null;
 //  INIT MAP
 // ═══════════════════════════════════════════════════════════════════
 function initMap() {
-  map = L.map('map', { zoomControl: true }).setView([-6.2088, 106.8456], 14);
+  map = L.map('map', { zoomControl: true, maxZoom: 22 }).setView([-6.2088, 106.8456], 14);
 
   // ─── Peta Dasar Infrastruktur Teknik (Gaya Gambar Kerja / CAD) ──
   // 100% Bebas API Key: Google Maps CAD Monokrom (Teknis & Lengkap)
@@ -2482,14 +2482,14 @@ function initMap() {
 
   // 100% Bebas API Key: ESRI Canvas Jelas & Tajam (Base + Label Reference + High Contrast)
   const esriCanvasBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 20,
-    maxNativeZoom: 18,
+    maxZoom: 22,
+    maxNativeZoom: 22,
     attribution: 'Tiles &copy; Esri',
     className: 'esri-canvas-tiles'
   });
   const esriCanvasRef = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 20,
-    maxNativeZoom: 18,
+    maxZoom: 22,
+    maxNativeZoom: 22,
     attribution: 'Labels &copy; Esri',
     className: 'esri-ref-tiles'
   });
@@ -2497,8 +2497,8 @@ function initMap() {
 
   // 100% Bebas API Key: ESRI Street CAD (Detail Bangunan, Gang & Jalan Tajam)
   const esriStreetCad = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 20,
-    maxNativeZoom: 19,
+    maxZoom: 22,
+    maxNativeZoom: 22,
     attribution: 'Tiles &copy; Esri (CAD High-Contrast)',
     className: 'cad-gray-tiles'
   });
@@ -2513,7 +2513,8 @@ function initMap() {
 
   // 100% Bebas API Key: OpenStreetMap CAD Monokrom
   const osmCad = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20,
+    maxZoom: 22,
+    maxNativeZoom: 19,
     attribution: '© OpenStreetMap (CAD Monokrom)',
     className: 'cad-gray-tiles'
   });
@@ -2535,7 +2536,9 @@ function initMap() {
     maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps Traffic'
   });
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20, attribution: '© OpenStreetMap contributors'
+    maxZoom: 22,
+    maxNativeZoom: 19,
+    attribution: '© OpenStreetMap contributors'
   });
 
   baseLayers = {
