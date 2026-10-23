@@ -402,6 +402,19 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.6); cursor: move;
     }
 
+    /* ─── CAD Grayscale Technical Basemap Filter ──────────────── */
+    .leaflet-tile.cad-gray-tiles {
+      filter: grayscale(100%) contrast(120%) brightness(105%);
+    }
+
+    .leaflet-control-layers {
+      border-radius: 8px !important;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3) !important;
+      border: 1px solid #334155 !important;
+      font-size: 11px !important;
+      font-family: inherit !important;
+    }
+
     /* ─── Engineering Pipe Callout Box with Arrow on Map ──────── */
     .pipe-callout-marker {
       background: transparent !important;
@@ -1856,6 +1869,9 @@
     <button class="lt-btn info" onclick="togglePipeLabels()" id="btn-toggle-labels">
       🏷️ Label: ON
     </button>
+    <button class="lt-btn info" onclick="toggleCadBasemap()" id="btn-toggle-cad-mode" title="Beralih antara Peta CAD Teknik dan Google Maps Standar">
+      📐 Backdrop: CAD
+    </button>
     <button class="lt-btn close" onclick="exitLayoutMode()" title="Kembali ke Mode Gambar Interaktif">
       ✕ Kembali
     </button>
@@ -2403,6 +2419,7 @@ let kopData = { ...DEFAULT_KOP_DATA };
 //  STATE
 // ═══════════════════════════════════════════════════════════════════
 let map;
+let baseLayers        = {};
 let currentMode       = 'pipe';
 let currentMaterial   = 'PVC';
 let currentPipeStatus = 'rencana';
@@ -2442,7 +2459,27 @@ let pendingLabelTarget      = null;
 function initMap() {
   map = L.map('map', { zoomControl: true }).setView([-6.2088, 106.8456], 14);
 
-  // ─── Google Maps Tile Layers ────────────────────────────────────
+  // ─── Peta Dasar Infrastruktur Teknik (Gaya Gambar Kerja / CAD) ──
+  const cadCarto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    subdomains: ['a', 'b', 'c', 'd'],
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  });
+
+  const cadGoogle = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    maxZoom: 22,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    attribution: '© Google Maps (CAD Monokrom)',
+    className: 'cad-gray-tiles'
+  });
+
+  const cadCartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    subdomains: ['a', 'b', 'c', 'd'],
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  });
+
+  // ─── Google Maps Tile Layers Standar ─────────────────────────────
   const googleRoadmap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
     maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '© Google Maps'
   });
@@ -2462,10 +2499,26 @@ function initMap() {
     maxZoom: 20, attribution: '© OpenStreetMap contributors'
   });
 
-  googleRoadmap.addTo(map);
+  baseLayers = {
+    cadCarto,
+    cadGoogle,
+    cadCartoDark,
+    googleRoadmap,
+    googleHybrid,
+    googleSatellite,
+    googleTerrain,
+    googleTraffic,
+    osm
+  };
+
+  // Aktifkan default Peta Infrastruktur Teknik (CAD Light)
+  cadCarto.addTo(map);
 
   L.control.layers({
-    '🗺️ Google Maps (Jalan)': googleRoadmap,
+    '📐 Peta Infrastruktur Teknik (CAD Light)': cadCarto,
+    '📐 Google Maps (CAD Monokrom)': cadGoogle,
+    '📐 CAD Blueprint (Dark DWG)': cadCartoDark,
+    '🗺️ Google Maps (Jalan Standar)': googleRoadmap,
     '🛰️ Google Maps (Satelit Hybrid)': googleHybrid,
     '🌍 Google Maps (Satelit Murni)': googleSatellite,
     '🏔️ Google Maps (Medan / Terrain)': googleTerrain,
@@ -4263,6 +4316,12 @@ function enterLayoutMode() {
   buildKopLegend();
   renderKopView();
 
+  const btnCad = document.getElementById('btn-toggle-cad-mode');
+  if (btnCad && baseLayers.cadCarto) {
+    const isCad = map.hasLayer(baseLayers.cadCarto) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadCartoDark);
+    btnCad.innerHTML = isCad ? '📐 Backdrop: CAD' : '🗺️ Backdrop: Normal';
+  }
+
   setTimeout(() => {
     map.invalidateSize();
     fitNetworkInView();
@@ -4282,6 +4341,26 @@ function exitLayoutMode() {
   setTimeout(() => {
     map.invalidateSize();
   }, 100);
+}
+
+function toggleCadBasemap() {
+  const btn = document.getElementById('btn-toggle-cad-mode');
+  if (!baseLayers.cadCarto || !baseLayers.googleRoadmap) return;
+  const isCadActive = map.hasLayer(baseLayers.cadCarto) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadCartoDark);
+
+  if (isCadActive) {
+    // Beralih ke Google Maps standar
+    Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    baseLayers.googleRoadmap.addTo(map);
+    if (btn) btn.innerHTML = '🗺️ Backdrop: Normal';
+    showToast('Backdrop beralih ke: Google Maps Standar', 'info', 2000);
+  } else {
+    // Beralih ke Peta Infrastruktur CAD Light
+    Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    baseLayers.cadCarto.addTo(map);
+    if (btn) btn.innerHTML = '📐 Backdrop: CAD';
+    showToast('Backdrop beralih ke: Peta Infrastruktur Teknik (CAD Light)', 'success', 2500);
+  }
 }
 
 function fitNetworkInView() {
