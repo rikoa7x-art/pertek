@@ -2513,10 +2513,12 @@ function switchPipeStatus(status) {
   document.getElementById('status-btn-existing').classList.toggle('active', status === 'existing');
   // Update drawing toolbar indicator
   const dtStatus = document.getElementById('dt-status');
-  if (dtStatus) dtStatus.textContent = status === 'existing' ? '[EXISTING]' : '[RENCANA]';
-  // Update live preview & style badge
-  updateStyleBadge();
-  updateLineLivePreview();
+  if (dtStatus) {
+    dtStatus.textContent = status === 'existing' ? '[EXISTING]' : '[RENCANA]';
+    dtStatus.style.color = status === 'existing' ? '#f59e0b' : '#94a3b8';
+  }
+  // Update live preview garis
+  updateLinePreview();
 }
 
 function switchMaterial(mat) {
@@ -3012,18 +3014,17 @@ function createPipePolyline(pts, props) {
   const weight = props.weight !== undefined ? props.weight : (getSelectedDiameterByProps(props)?.weight || 6);
   const style = props.lineStyle || 'solid';
   const dashArray = props.dashArray !== undefined ? props.dashArray : getDashArrayForStyle(style, weight);
-  const isExisting = props.pipeStatus === 'existing';
 
-  // Existing pipe: warna orange-coklat, opacity lebih rendah, selalu solid
-  const lineColor = isExisting ? getExistingPipeColor(props.color) : props.color;
-  const lineOpacity = isExisting ? 0.75 : 0.95;
-  const lineDash = isExisting ? null : dashArray;
+  // Warna pipa selalu menyesuaikan dengan standar warna diameter (baik rencana maupun existing)
+  const catDiam = getSelectedDiameterByProps(props);
+  const lineColor = (props.color && props.color !== '#f97316') ? props.color : (catDiam?.color || props.color || '#38bdf8');
+  props.color = lineColor;
 
   const poly = L.polyline(pts, {
     color: lineColor,
     weight: weight,
-    opacity: lineOpacity,
-    dashArray: lineDash,
+    opacity: 0.95,
+    dashArray: dashArray,
     lineCap: 'round',
     lineJoin: 'round'
   });
@@ -3038,29 +3039,6 @@ function createPipePolyline(pts, props) {
   });
 
   return poly;
-}
-
-function getExistingPipeColor(originalColor) {
-  // Map warna rencana ke warna existing (lebih gelap/orange tones)
-  // Existing pipe selalu ditampilkan dengan warna coklat-orange agar beda dari rencana
-  const existingColorMap = {
-    '#38bdf8': '#f97316', // PVC biru -> orange
-    '#60a5fa': '#fb923c',
-    '#818cf8': '#fbbf24',
-    '#c084fc': '#f59e0b',
-    '#f472b6': '#ef4444',
-    '#34d399': '#a16207',
-    '#a3e635': '#854d0e',
-    '#fbbf24': '#92400e',
-    '#fb923c': '#7c2d12',
-    // HDPE kuning -> coklat tua
-    '#facc15': '#b45309',
-    '#fde047': '#a16207',
-    '#fef08a': '#78350f',
-    '#d9f99d': '#713f12',
-    '#bbf7d0': '#78350f',
-  };
-  return existingColorMap[originalColor] || '#f97316';
 }
 
 function cancelDrawing() {
@@ -3692,8 +3670,9 @@ function clearVertexHandles() {
 //  POPUPS & TOOLTIPS
 // ═══════════════════════════════════════════════════════════════════
 function makePipeTooltip(p) {
+  const statusTag = p.pipeStatus === 'existing' ? '[EXISTING] ' : '';
   const styleText = p.lineStyle === 'dot' ? ' • Dot' : (p.lineStyle === 'dash' ? ' • Putus' : '');
-  return `[${p.material}${styleText}] ${p.name} | ⌀ ${p.inch} (${p.diameter} mm) | ${p.length.toFixed(1)} m`;
+  return `${statusTag}[${p.material}${styleText}] ${p.name} | ⌀ ${p.inch} (${p.diameter} mm) | ${p.length.toFixed(1)} m`;
 }
 
 function makePipePopup(p, atLatLng) {
@@ -3703,6 +3682,7 @@ function makePipePopup(p, atLatLng) {
   const lngVal = atLatLng && atLatLng.lng ? atLatLng.lng : null;
   return `
     <div class="popup-title">💧 ${p.name}</div>
+    <div class="popup-row"><span class="popup-key">Status:</span><span class="popup-val" style="color:${p.pipeStatus==='existing'?'#f59e0b':'#38bdf8'};font-weight:700;">${p.pipeStatus==='existing'?'🟠 Existing (Terpasang)':'📐 Rencana (Baru)'}</span></div>
     <div class="popup-row"><span class="popup-key">Material:</span><span class="popup-val" style="color:${p.material==='HDPE'?'#facc15':'#38bdf8'}">${p.material}</span></div>
     <div class="popup-row"><span class="popup-key">Diameter:</span><span class="popup-val" style="color:${p.color}">${p.inch} (${p.diameter} mm)</span></div>
     <div class="popup-row"><span class="popup-key">Gaya Garis:</span><span class="popup-val">${styleLabel} (${weightVal}px)</span></div>
@@ -3927,15 +3907,12 @@ function savePipeModal() {
   pobj.props.year      = document.getElementById('pm-year').value;
   pobj.props.notes     = document.getElementById('pm-notes').value;
   pobj.props.pipeStatus = document.getElementById('pm-status').value;
-
-  const isExistingNew = pobj.props.pipeStatus === 'existing';
-  const finalColor = isExistingNew ? getExistingPipeColor(d.color) : d.color;
-  pobj.props.color = d.color; // simpan warna asli
+  pobj.props.color = d.color; // Selalu gunakan standar warna diameter
   pobj.polyline.setStyle({
-    color: finalColor,
+    color: d.color,
     weight: weight,
-    opacity: isExistingNew ? 0.75 : 0.95,
-    dashArray: isExistingNew ? null : dash,
+    opacity: 0.95,
+    dashArray: dash,
     lineCap: 'round',
     lineJoin: 'round'
   });
@@ -4538,12 +4515,6 @@ function buildKopLegend() {
     el.innerHTML = `<span class="kop-leg-dot" style="background:${d.color};"></span> Ø ${d.inch} (${d.mm}mm)`;
     cont.appendChild(el);
   });
-
-  // Add existing pipe legend entry
-  const existingEl = document.createElement('div');
-  existingEl.className = 'kop-leg-item';
-  existingEl.innerHTML = `<span class="kop-leg-dot" style="background:#f97316;border:2px solid #7c2d12;"></span> 🟠 Pipa Existing`;
-  cont.appendChild(existingEl);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4751,11 +4722,13 @@ function loadGeoJSON(geojson) {
     const p = f.properties;
     if (p.elementType === 'pipe' && f.geometry.type === 'LineString') {
       const pts = f.geometry.coordinates.map(c => L.latLng(c[1], c[0]));
+      const catDiam = getSelectedDiameterByProps(p);
       const props = {
         ...p,
+        color: (p.color && p.color !== '#f97316') ? p.color : (catDiam?.color || p.color),
         length: calcPolylineLength(pts),
         lineStyle: p.lineStyle || (p.material === 'HDPE' ? 'dash' : 'solid'),
-        weight: p.weight || (getSelectedDiameterByProps(p)?.weight || 6),
+        weight: p.weight || (catDiam?.weight || 6),
         customLabel: p.customLabel || undefined,
         labelPos: p.labelPos || undefined,
         pipeStatus: p.pipeStatus || 'rencana'
