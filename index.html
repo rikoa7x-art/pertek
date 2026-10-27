@@ -404,7 +404,18 @@
 
     /* ─── CAD Grayscale, ESRI & Blueprint Technical Basemap Filter ─── */
     .leaflet-tile.cad-gray-tiles {
-      filter: grayscale(100%) contrast(125%) brightness(105%);
+      /* Filter presisi CAD Monokrom: garis tepi jalan hitam tegas, badan jalan putih bersih, kavling abu-abu rapi */
+      filter: grayscale(100%) brightness(62%) contrast(450%);
+    }
+
+    .leaflet-tile.cad-osm-tiles {
+      /* Filter OpenStreetMap CAD: kontras tinggi dengan garis jalan sangat jelas */
+      filter: grayscale(100%) contrast(150%) brightness(95%);
+    }
+
+    .leaflet-tile.cad-esri-tiles {
+      /* Filter ESRI Street CAD: kontras tajam untuk gambar teknik */
+      filter: grayscale(100%) contrast(180%) brightness(92%);
     }
 
     .leaflet-tile.esri-canvas-tiles {
@@ -916,6 +927,11 @@
 
     /* ─── PRINT MEDIA QUERY (Exact Vector A3 / A4) ───────────── */
     @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
       @page {
         size: A3 landscape;
         margin: 5mm;
@@ -2500,7 +2516,7 @@ function initMap() {
     maxZoom: 22,
     maxNativeZoom: 22,
     attribution: 'Tiles &copy; Esri (CAD High-Contrast)',
-    className: 'cad-gray-tiles'
+    className: 'cad-esri-tiles'
   });
 
   // 100% Bebas API Key: Google Maps Blueprint (AutoCAD Dark Style)
@@ -2516,7 +2532,7 @@ function initMap() {
     maxZoom: 22,
     maxNativeZoom: 19,
     attribution: '© OpenStreetMap (CAD Monokrom)',
-    className: 'cad-gray-tiles'
+    className: 'cad-osm-tiles'
   });
 
   // ─── Google Maps Tile Layers Standar ─────────────────────────────
@@ -2555,15 +2571,15 @@ function initMap() {
     osm
   };
 
-  // Aktifkan default: ESRI Canvas Tajam & Jelas
-  esriCanvas.addTo(map);
+  // Aktifkan default: Google Maps CAD Monokrom Tajam & Jelas
+  cadGoogle.addTo(map);
 
   L.control.layers({
-    '📐 ESRI Canvas (CAD Tajam & Jelas)': esriCanvas,
+    '📐 Google Maps (CAD Monokrom Tajam)': cadGoogle,
+    '📐 OpenStreetMap (CAD Garis Jalan Jelas)': osmCad,
     '📐 ESRI Street CAD (Detail Bangunan & Jalan)': esriStreetCad,
-    '📐 Google Maps (CAD Monokrom)': cadGoogle,
+    '📐 ESRI Canvas (CAD Minimalis)': esriCanvas,
     '📐 CAD Blueprint (Dark DWG)': cadBlueprint,
-    '📐 OpenStreetMap (CAD Monokrom)': osmCad,
     '🗺️ Google Maps (Jalan Standar)': googleRoadmap,
     '🛰️ Google Maps (Satelit Hybrid)': googleHybrid,
     '🌍 Google Maps (Satelit Murni)': googleSatellite,
@@ -4391,7 +4407,7 @@ function exitLayoutMode() {
 
 function toggleCadBasemap() {
   const btn = document.getElementById('btn-toggle-cad-mode');
-  if (!baseLayers.esriCanvas || !baseLayers.googleRoadmap) return;
+  if (!baseLayers.cadGoogle || !baseLayers.googleRoadmap) return;
   const isCadActive = map.hasLayer(baseLayers.esriCanvas) || map.hasLayer(baseLayers.esriStreetCad) || map.hasLayer(baseLayers.cadGoogle) || map.hasLayer(baseLayers.cadBlueprint) || map.hasLayer(baseLayers.osmCad);
 
   if (isCadActive) {
@@ -4401,11 +4417,11 @@ function toggleCadBasemap() {
     if (btn) btn.innerHTML = '🗺️ Backdrop: Normal';
     showToast('Backdrop beralih ke: Google Maps Standar', 'info', 2000);
   } else {
-    // Beralih ke ESRI Canvas Tajam & Jelas
+    // Beralih ke Google Maps CAD Monokrom (Garis Tajam & Jelas)
     Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
-    baseLayers.esriCanvas.addTo(map);
+    baseLayers.cadGoogle.addTo(map);
     if (btn) btn.innerHTML = '📐 Backdrop: CAD';
-    showToast('Backdrop beralih ke: ESRI Canvas (CAD Tajam & Jelas)', 'success', 2500);
+    showToast('Backdrop beralih ke: Google Maps CAD Monokrom (Garis Tajam)', 'success', 2500);
   }
 }
 
